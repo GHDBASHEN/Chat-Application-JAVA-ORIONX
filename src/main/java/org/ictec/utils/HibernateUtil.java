@@ -9,10 +9,13 @@ public class HibernateUtil {
     static {
         try {
             Configuration configuration = new Configuration();
-            configuration.configure("hibernate.cfg.xml"); // Loads hibernate.cfg.xml
+            configuration.configure("hibernate.cfg.xml");
+            System.out.println("Hibernate Configuration Loaded Successfully");
             sessionFactory = configuration.buildSessionFactory();
+            System.out.println("SessionFactory Created Successfully");
         } catch (Throwable ex) {
             System.err.println("Initial SessionFactory creation failed: " + ex);
+            ex.printStackTrace();
             throw new ExceptionInInitializerError(ex);
         }
     }
