@@ -52,8 +52,8 @@ public class ClientDemo {
 
         // Exporting the observer
         ChatObserver observerStub = (ChatObserver) UnicastRemoteObject.exportObject(observer, 0);
-        chatService.subscribe(user, observerStub, logService.login(user.getUser_id()));
-        logService.login(user.getUser_id());
+        chatService.subscribe(user, observerStub, logService.login((int) user.getUser_id()));
+        logService.login((int) user.getUser_id());
 
         sendButton.addActionListener(e -> {
             try {

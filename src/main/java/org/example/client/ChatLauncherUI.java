@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import org.example.domain.Chat;
 import org.example.domain.ChatLog;
 import org.example.domain.User;
 import org.example.rmi.*;
@@ -69,12 +70,12 @@ public class ChatLauncherUI extends JFrame {
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         emailField = new JTextField(20);
-        styleTextField(emailField, "Email");
+
         passwordField = new JPasswordField(20);
-        styleTextField(passwordField, "Password");
+
 
         loginButton = new JButton("Login");
-        styleButton(loginButton, new Color(76, 175, 80));
+        styleButton(loginButton, new Color(183, 59, 198));
 
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -110,7 +111,7 @@ public class ChatLauncherUI extends JFrame {
         field.setPreferredSize(new Dimension(250, 35));
         field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(204, 204, 204)),
+                BorderFactory.createLineBorder(new Color(89, 209, 67)),
                 BorderFactory.createEmptyBorder(5, 10, 5, 10)));
         ((JTextComponent) field).setText(placeholder);
         ((JTextComponent) field).setForeground(Color.GRAY);
@@ -152,9 +153,12 @@ public class ChatLauncherUI extends JFrame {
         try {
             User user = userService.checkEmailAndPassword(email, password);
             if (user != null) {
-                openChatWindow(user);
-                emailField.setText("");
-                passwordField.setText("");
+                if (user.getRole().equalsIgnoreCase("admin")) {
+                    new AdminDashboardUI(user.getUsername(), userService, chatService);}
+//                } else {
+//                    new UserDashboardUI(user, chatService, userService);
+//                }
+                dispose(); // Close login window
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid credentials!", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -164,7 +168,7 @@ public class ChatLauncherUI extends JFrame {
         }
     }
 
-    private void openChatWindow(User user) throws Exception {
+    private void openChatWindow(User user, Chat chat) throws Exception {
         JFrame chatFrame = new JFrame("Chat - " + user.getEmail());
         chatFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         chatFrame.setSize(600, 500);
@@ -175,9 +179,9 @@ public class ChatLauncherUI extends JFrame {
 
         // Header panel
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(new Color(245, 245, 245));
+        headerPanel.setBackground(new Color(101, 248, 74));
         headerPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)),
+                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(95, 225, 71)),
                 BorderFactory.createEmptyBorder(10, 15, 10, 15)));
 
         JLabel headerLabel = new JLabel("Chat Room - " + user.getEmail());
@@ -186,7 +190,7 @@ public class ChatLauncherUI extends JFrame {
 
         JLabel timeLabel = new JLabel(LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM dd, hh:mm a")));
         timeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        timeLabel.setForeground(new Color(120, 120, 120));
+        timeLabel.setForeground(new Color(184, 47, 193));
         headerPanel.add(timeLabel, BorderLayout.EAST);
 
         // Chat area
@@ -230,21 +234,36 @@ public class ChatLauncherUI extends JFrame {
         };
 
         ChatObserver stub = (ChatObserver) UnicastRemoteObject.exportObject(observer, 0);
-        chatLog = logService.login(user.getUser_id());
-        chatService.subscribe(user, stub, chatLog);
 
-        sendButton.addActionListener(ev -> handleMessageSend(inputField, user, stub));
+        try {
+            chatLog = logService.login(user.getUser_id(), chat.getChatId());
+            chatService.subscribeUserToChat(user.getUser_id(), chat.getChatId());
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this, "Failed to join chat");
+            return;
+        }
 
-        inputField.addActionListener(ev -> handleMessageSend(inputField, user, stub));
+        sendButton.addActionListener(ev -> {
+            try {
+                String msg = inputField.getText().trim();
+                if (!msg.isEmpty()) {
+                    chatService.sendMessageToChat(
+                            chat.getChatId(),
+                            user.getUsername() + ": " + msg
+                    );
+                    inputField.setText("");
+                }
+            } catch (RemoteException ex) {
+                ex.printStackTrace();
+            }
+        });
 
         chatFrame.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent windowEvent) {
                 try {
-                    chatLog = logService.logout(user.getUser_id());
-                    if (chatLog != null) {
-                        chatService.unsubscribe(user, stub, chatLog);
-                    }
+                    chatService.unsubscribeUserFromChat(user.getUser_id(), chat.getChatId());
+                    logService.logout(user.getUser_id(), chat.getChatId());
                 } catch (RemoteException ex) {
                     ex.printStackTrace();
                 }
@@ -255,15 +274,15 @@ public class ChatLauncherUI extends JFrame {
         chatFrame.setVisible(true);
     }
 
-    private void handleMessageSend(JTextField inputField, User user, ChatObserver stub) {
+    private void handleMessageSend(JTextField inputField, User user, ChatObserver stub, Chat chat) {
         try {
             String msg = inputField.getText().trim();
             if (!msg.isEmpty()) {
-                if (logService.isUserOnline(user.getUser_id())) {
+                if (logService.isUserOnline(user.getUser_id(), chat.getChatId())) {
                     chatService.sendMessage(msg, user);
                 }
                 if (msg.equalsIgnoreCase("Bye")) {
-                    chatLog = logService.logout(user.getUser_id());
+                    chatLog = logService.logout(user.getUser_id(), chat.getChatId());
                     chatService.unsubscribe(user, stub, chatLog);
                 }
                 inputField.setText("");
