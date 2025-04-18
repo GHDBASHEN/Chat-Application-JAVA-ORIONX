@@ -1,20 +1,15 @@
 package org.example.client;
 
 import javax.swing.*;
-import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import org.example.client.user.UserChatWindow;
-import org.example.client.user.UserDashboardUI;
-import org.example.domain.Chat;
+import org.example.client.admin.AdminDashboardUI;
+import org.example.client.user.userDashBoard;
 import org.example.domain.ChatLog;
 import org.example.domain.User;
 import org.example.rmi.*;
@@ -148,8 +143,7 @@ public class ChatLauncherUI extends JFrame {
                 if (user.getRole().equalsIgnoreCase("admin")) {
                     new AdminDashboardUI(user.getUsername(), userService, chatService);
                 } else {
-                    //new UserDashboardUI(user, chatService, userService);
-                    new UserChatWindow(chatService, userService, logService, chatLog).openUserWindow(user);
+                    new userDashBoard(chatService, userService, logService, chatLog).handle(user);
                 }
                 dispose(); // Close login window
             } else {
@@ -160,7 +154,7 @@ public class ChatLauncherUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Login error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());

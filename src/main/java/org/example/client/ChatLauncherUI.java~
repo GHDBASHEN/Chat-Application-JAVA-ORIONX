@@ -1,20 +1,14 @@
 package org.example.client;
 
 import javax.swing.*;
-import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import org.example.client.user.UserChatWindow;
-import org.example.client.user.UserDashboardUI;
-import org.example.domain.Chat;
+import org.example.client.user.userDashBoard;
 import org.example.domain.ChatLog;
 import org.example.domain.User;
 import org.example.rmi.*;
@@ -148,8 +142,8 @@ public class ChatLauncherUI extends JFrame {
                 if (user.getRole().equalsIgnoreCase("admin")) {
                     new AdminDashboardUI(user.getUsername(), userService, chatService);
                 } else {
-                    //new UserDashboardUI(user, chatService, userService);
-                    new UserChatWindow(chatService, userService, logService, chatLog).openUserWindow(user);
+                    new userDashBoard(chatService, userService, logService, chatLog).handle(user);
+                    //new UserChatWindow(chatService, userService, logService, chatLog).openUserWindow(user);
                 }
                 dispose(); // Close login window
             } else {
@@ -158,24 +152,6 @@ public class ChatLauncherUI extends JFrame {
         } catch (Exception ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Login error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void handleMessageSend(JTextField inputField, User user, ChatObserver stub, Chat chat) {
-        try {
-            String msg = inputField.getText().trim();
-            if (!msg.isEmpty()) {
-                if (logService.isUserOnline(user.getUser_id())) {
-                    chatService.sendMessage(msg, user);
-                }
-                if (msg.equalsIgnoreCase("Bye")) {
-                    chatLog = logService.logout(user.getUser_id());
-                    chatService.unsubscribe(user, stub, chatLog);
-                }
-                inputField.setText("");
-            }
-        } catch (RemoteException ex) {
-            ex.printStackTrace();
         }
     }
 

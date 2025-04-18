@@ -1,4 +1,4 @@
-package org.example.client;
+package org.example.client.admin;
 
 import org.example.domain.Chat;
 import org.example.domain.User;
