@@ -17,6 +17,9 @@ public class AdminDashboardUI extends JFrame {
     private final UserService userService;
     private final ChatService chatService;
     private final String adminUsername;
+    private JTabbedPane tabbedPane;
+    private JTable userTable;
+    private JTable chatTable;
 
     public AdminDashboardUI(String username, UserService userService, ChatService chatService) {
         this.userService = userService;
@@ -41,7 +44,7 @@ public class AdminDashboardUI extends JFrame {
         mainPanel.add(createHeaderPanel(), BorderLayout.NORTH);
 
         // Content panel with tabs
-        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane = new JTabbedPane();
         tabbedPane.addTab("User Management", createUserManagementPanel());
         tabbedPane.addTab("Chat Management", createChatManagementPanel());
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
@@ -71,10 +74,7 @@ public class AdminDashboardUI extends JFrame {
 
     private JPanel createUserManagementPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setOpaque(false);
-
-        // User list
-        JTable userTable = new JTable();
+        userTable = new JTable(); // Initialize class member
         JScrollPane scrollPane = new JScrollPane(userTable);
 
         // Control buttons
@@ -95,10 +95,7 @@ public class AdminDashboardUI extends JFrame {
 
     private JPanel createChatManagementPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setOpaque(false);
-
-        // Chat list
-        JTable chatTable = new JTable();
+        chatTable = new JTable(); // Initialize class member
         JScrollPane scrollPane = new JScrollPane(chatTable);
 
         // Control buttons
@@ -257,10 +254,7 @@ public class AdminDashboardUI extends JFrame {
             }
 
             // Update tables
-            JTable userTable = (JTable) ((JScrollPane) ((JPanel) ((JTabbedPane) getContentPane().getComponent(0)).getComponent(0)).getComponent(0)).getViewport().getView();
             userTable.setModel(userModel);
-
-            JTable chatTable = (JTable) ((JScrollPane) ((JPanel) ((JTabbedPane) getContentPane().getComponent(0)).getComponent(1)).getComponent(0)).getViewport().getView();
             chatTable.setModel(chatModel);
 
         } catch (RemoteException e) {

@@ -1,9 +1,12 @@
 package org.example.client;
+import org.example.rmi.ChatService;
+import org.example.rmi.UserService;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class UserDashboardUI extends JFrame {
-    public UserDashboardUI(String username) {
+    public UserDashboardUI(String username, UserService userService, ChatService chatService) {
         setTitle("User Dashboard");
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
