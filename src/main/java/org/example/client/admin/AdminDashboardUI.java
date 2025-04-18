@@ -81,7 +81,7 @@ public class AdminDashboardUI extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setOpaque(false);
 
-        JButton removeUserBtn = createActionButton("Remove User", "❌", () -> removeUser());
+        JButton removeUserBtn = createActionButton("Remove User", "❌", this::removeUser);
         JButton refreshBtn = createActionButton("Refresh", "🔄", this::loadData);
 
         buttonPanel.add(removeUserBtn);
@@ -128,7 +128,9 @@ public class AdminDashboardUI extends JFrame {
                 BorderFactory.createEmptyBorder(10, 15, 10, 15)
         ));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.addActionListener(e -> action.run());
+        btn.addActionListener(e -> {
+            action.run();
+        });
         return btn;
     }
 
@@ -209,7 +211,10 @@ public class AdminDashboardUI extends JFrame {
                 return;
             }
 
-            Long userId = (Long) userTable.getValueAt(selectedRow, 0);
+            // Retrieve as Integer first, then convert to Long
+            Integer userIdInt = (Integer) userTable.getValueAt(selectedRow, 0);
+            int userId = (int) userIdInt.longValue();  // Convert to Long
+
             int confirm = JOptionPane.showConfirmDialog(
                     this,
                     "Are you sure you want to delete this user?",
@@ -223,6 +228,8 @@ public class AdminDashboardUI extends JFrame {
             }
         } catch (RemoteException e) {
             showError("Failed to delete user: " + e.getMessage());
+        } catch (Exception e) {
+            showError("Error: " + e.getMessage());
         }
     }
 
