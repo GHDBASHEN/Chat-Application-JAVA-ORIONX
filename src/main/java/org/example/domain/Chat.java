@@ -3,7 +3,7 @@ package org.example.domain;
 import java.time.LocalDateTime;
 
 public class Chat {
-    private Long chatId;
+    private int chatId;
     private String chatName;
     private String description;
     private LocalDateTime createdTime;
@@ -20,12 +20,11 @@ public class Chat {
         this.description = description;
     }
 
-    // Getters and Setters
-    public Long getChatId() {
+    public int getChatId() {
         return chatId;
     }
 
-    public void setChatId(Long chatId) {
+    public void setChatId(int chatId) {
         this.chatId = chatId;
     }
 

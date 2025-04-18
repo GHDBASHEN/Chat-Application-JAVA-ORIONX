@@ -160,7 +160,25 @@ public class ChatLauncherUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Login error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
+    private void handleMessageSend(JTextField inputField, User user, ChatObserver stub, Chat chat) {
+        try {
+            String msg = inputField.getText().trim();
+            if (!msg.isEmpty()) {
+                if (logService.isUserOnline(user.getUser_id())) {
+                    chatService.sendMessage(msg, user);
+                }
+                if (msg.equalsIgnoreCase("Bye")) {
+                    chatLog = logService.logout(user.getUser_id());
+                    chatService.unsubscribe(user, stub, chatLog);
+                }
+                inputField.setText("");
+            }
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());

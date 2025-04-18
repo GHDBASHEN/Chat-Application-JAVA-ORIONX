@@ -191,9 +191,9 @@ public class AdminDashboardUI extends JFrame {
                 Chat chat = (Chat) chatCombo.getSelectedItem();
 
                 if (subscribe) {
-                    //chatService.subscribeUserToChat(user.getUser_id(), chat.getChatId());
+                    chatService.subscribeUserToChat(user.getUser_id(), chat.getChatId());
                 } else {
-                    //chatService.unsubscribeUserFromChat(user.getUser_id(), chat.getChatId());
+                    chatService.unsubscribeUserFromChat(user.getUser_id(), chat.getChatId());
                 }
 
                 JOptionPane.showMessageDialog(this,

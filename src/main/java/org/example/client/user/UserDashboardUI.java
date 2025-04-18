@@ -1,4 +1,8 @@
-package org.example.client;
+package org.example.client.user;
+import org.example.domain.User;
+import org.example.rmi.ChatService;
+import org.example.rmi.UserService;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -24,5 +28,8 @@ public class UserDashboardUI extends JFrame {
 
         add(panel);
         setVisible(true);
+    }
+
+    public UserDashboardUI(User user, ChatService chatService, UserService userService) {
     }
 }
