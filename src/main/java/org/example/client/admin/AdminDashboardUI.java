@@ -230,13 +230,17 @@ public class AdminDashboardUI extends JFrame {
         try {
             // Load users
             List<User> users = userService.getAllUsers();
-            String[] userColumns = {"User ID", "Username", "Email"};
+            String[] userColumns = {"User ID", "Email", "Nickname", "Password", "Profile Picture", "Role", "Username"};
             DefaultTableModel userModel = new DefaultTableModel(userColumns, 0);
             for (User user : users) {
                 userModel.addRow(new Object[]{
                         user.getUser_id(),
-                        user.getUsername(),
-                        user.getEmail()
+                        user.getEmail(),
+                        user.getNickname(),
+                        user.getPassword(),
+                        user.getProfile_picture(),
+                        user.getRole(),
+                        user.getUsername()
                 });
             }
             userTable.setModel(userModel);
@@ -271,7 +275,6 @@ public class AdminDashboardUI extends JFrame {
                 Registry registry = LocateRegistry.getRegistry("localhost", 55545);
                 UserService userService = (UserService) registry.lookup("UserService");
                 ChatService chatService = (ChatService) registry.lookup("ChatService");
-
                 new AdminDashboardUI("admin", userService, chatService);
             } catch (Exception e) {
                 e.printStackTrace();

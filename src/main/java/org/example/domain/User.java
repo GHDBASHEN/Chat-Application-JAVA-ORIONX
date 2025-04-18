@@ -22,6 +22,7 @@ public class User implements Serializable {
     private String profile_picture;
     private String role;
 
+
     public int getUser_id() {
         return user_id;
     }

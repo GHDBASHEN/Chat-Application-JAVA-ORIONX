@@ -23,7 +23,12 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
 
     @Override
     public List<User> getAllUsers() throws RemoteException {
-        return List.of();
+        try {
+            return session.createQuery("FROM User", User.class).list();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RemoteException("Error fetching users", e);
+        }
     }
 
     @Override
