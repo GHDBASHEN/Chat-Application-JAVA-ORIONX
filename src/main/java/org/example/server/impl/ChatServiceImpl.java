@@ -3,7 +3,6 @@ import org.example.domain.*;
 import org.example.rmi.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,12 +23,12 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
     }
 
     @Override
-    public void subscribeUserToChat(Long userId, Long chatId) throws RemoteException {
+    public void subscribeUserToChat(int userId, Long chatId) throws RemoteException {
 
     }
 
     @Override
-    public void unsubscribeUserFromChat(Long userId, Long chatId) throws RemoteException {
+    public void unsubscribeUserFromChat(int userId, Long chatId) throws RemoteException {
 
     }
 
