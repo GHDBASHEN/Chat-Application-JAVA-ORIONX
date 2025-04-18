@@ -131,7 +131,18 @@ public class ChatLogServiceImpl extends UnicastRemoteObject implements ChatLogSe
     }
 
 
+    @Override
+    public ChatLog login(Long userId, Long chatId) throws RemoteException {
+        return null;
+    }
 
+    @Override
+    public ChatLog logout(Long userId, Long chatId) throws RemoteException {
+        return null;
+    }
 
-
+    @Override
+    public boolean isUserOnline(Long userId, Long chatId) throws RemoteException {
+        return false;
+    }
 }

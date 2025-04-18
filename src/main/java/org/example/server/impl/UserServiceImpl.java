@@ -8,6 +8,7 @@ import org.hibernate.cfg.Configuration;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
 
 public class UserServiceImpl extends UnicastRemoteObject implements UserService {
     Session session = null;
@@ -18,6 +19,16 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
         configuration.configure("hibernate.cfg.xml");
         SessionFactory factory = configuration.buildSessionFactory();
         session = factory.openSession();
+    }
+
+    @Override
+    public List<User> getAllUsers() throws RemoteException {
+        return List.of();
+    }
+
+    @Override
+    public void deleteUser(Long userId) throws RemoteException {
+
     }
 
     @Override

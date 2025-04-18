@@ -14,6 +14,31 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
     public ChatServiceImpl() throws RemoteException {}
 
     @Override
+    public void createChat(Chat chat) throws RemoteException {
+
+    }
+
+    @Override
+    public List<Chat> getAllChats() throws RemoteException {
+        return List.of();
+    }
+
+    @Override
+    public void subscribeUserToChat(Long userId, Long chatId) throws RemoteException {
+
+    }
+
+    @Override
+    public void unsubscribeUserFromChat(Long userId, Long chatId) throws RemoteException {
+
+    }
+
+    @Override
+    public void sendMessageToChat(Long chatId, String message) throws RemoteException {
+
+    }
+
+    @Override
     public void sendMessage(String message, User sender) throws RemoteException {
         // Save to DB (add your Hibernate code here)
 

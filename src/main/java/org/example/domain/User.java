@@ -22,8 +22,8 @@ public class User implements Serializable {
     private String profile_picture;
     private String role;
 
-    public int getUser_id() {
-        return user_id;
+    public long getUser_id() {
+        return (long) user_id;
     }
 
     public void setUser_id(int user_id) {
