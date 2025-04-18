@@ -18,6 +18,11 @@ public class AdminDashboardUI extends JFrame {
     private final ChatService chatService;
     private final String adminUsername;
 
+    private JTable userTable;
+    private JTable chatTable;
+    private JTabbedPane tabbedPane;
+
+
     public AdminDashboardUI(String username, UserService userService, ChatService chatService) {
         this.userService = userService;
         this.chatService = chatService;
@@ -32,15 +37,12 @@ public class AdminDashboardUI extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Main container with modern styling
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         mainPanel.setBackground(new Color(245, 245, 245));
 
-        // Header panel
         mainPanel.add(createHeaderPanel(), BorderLayout.NORTH);
 
-        // Content panel with tabs
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("User Management", createUserManagementPanel());
         tabbedPane.addTab("Chat Management", createChatManagementPanel());
@@ -73,15 +75,13 @@ public class AdminDashboardUI extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
 
-        // User list
-        JTable userTable = new JTable();
+        userTable = new JTable();
         JScrollPane scrollPane = new JScrollPane(userTable);
 
-        // Control buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setOpaque(false);
 
-        JButton removeUserBtn = createActionButton("Remove User", "❌", () -> removeUser(userTable));
+        JButton removeUserBtn = createActionButton("Remove User", "❌", () -> removeUser());
         JButton refreshBtn = createActionButton("Refresh", "🔄", this::loadData);
 
         buttonPanel.add(removeUserBtn);
@@ -97,22 +97,20 @@ public class AdminDashboardUI extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
 
-        // Chat list
-        JTable chatTable = new JTable();
+        chatTable = new JTable();
         JScrollPane scrollPane = new JScrollPane(chatTable);
 
-        // Control buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setOpaque(false);
 
         JButton createChatBtn = createActionButton("Create Chat", "➕", this::createChat);
-        JButton subscribeBtn = createActionButton("Subscribe User", "🔗", () -> manageSubscription(true));
-        JButton unsubscribeBtn = createActionButton("Unsubscribe User", "🔓", () -> manageSubscription(false));
+      //  JButton subscribeBtn = createActionButton("Subscribe User", "🔗", () -> manageSubscription(true));
+      //  JButton unsubscribeBtn = createActionButton("Unsubscribe User", "🔓", () -> manageSubscription(false));
         JButton refreshBtn = createActionButton("Refresh", "🔄", this::loadData);
 
         buttonPanel.add(createChatBtn);
-        buttonPanel.add(subscribeBtn);
-        buttonPanel.add(unsubscribeBtn);
+      //  buttonPanel.add(subscribeBtn);
+      //  buttonPanel.add(unsubscribeBtn);
         buttonPanel.add(refreshBtn);
 
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -145,8 +143,7 @@ public class AdminDashboardUI extends JFrame {
         panel.add(new JLabel("Description:"));
         panel.add(scrollPane);
 
-        int result = JOptionPane.showConfirmDialog(
-                this, panel, "Create New Chat", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(this, panel, "Create New Chat", JOptionPane.OK_CANCEL_OPTION);
 
         if (result == JOptionPane.OK_OPTION) {
             try {
@@ -162,50 +159,49 @@ public class AdminDashboardUI extends JFrame {
         }
     }
 
-    private void manageSubscription(boolean subscribe) {
-        try {
-            List<User> users = userService.getAllUsers();
-            List<Chat> chats = chatService.getAllChats();
+//    private void manageSubscription(boolean subscribe) {
+//        try {
+//            List<User> users = userService.getAllUsers();
+//            List<Chat> chats = chatService.getAllChats();
+//
+//            if (users.isEmpty() || chats.isEmpty()) {
+//                showError("No users or chats available");
+//                return;
+//            }
+//
+//            JComboBox<User> userCombo = new JComboBox<>(users.toArray(new User[0]));
+//            JComboBox<Chat> chatCombo = new JComboBox<>(chats.toArray(new Chat[0]));
+//
+//            JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+//            panel.add(new JLabel("Select User:"));
+//            panel.add(userCombo);
+//            panel.add(new JLabel("Select Chat:"));
+//            panel.add(chatCombo);
+//
+//            int result = JOptionPane.showConfirmDialog(
+//                    this, panel,
+//                    subscribe ? "Subscribe User" : "Unsubscribe User",
+//                    JOptionPane.OK_CANCEL_OPTION);
+//
+//            if (result == JOptionPane.OK_OPTION) {
+//                User user = (User) userCombo.getSelectedItem();
+//                Chat chat = (Chat) chatCombo.getSelectedItem();
+//
+//                if (subscribe) {
+//                    chatService.subscribeUserToChat(user.getUser_id(), chat.getChatId());
+//                } else {
+//                    chatService.unsubscribeUserFromChat(user.getUser_id(), chat.getChatId());
+//                }
+//
+//                JOptionPane.showMessageDialog(this, "Operation completed successfully!");
+//                loadData();
+//            }
+//        } catch (RemoteException e) {
+//            showError("Operation failed: " + e.getMessage());
+//        }
+//    }
 
-            if (users.isEmpty() || chats.isEmpty()) {
-                showError("No users or chats available");
-                return;
-            }
-
-            JComboBox<User> userCombo = new JComboBox<>(users.toArray(new User[0]));
-            JComboBox<Chat> chatCombo = new JComboBox<>(chats.toArray(new Chat[0]));
-
-            JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
-            panel.add(new JLabel("Select User:"));
-            panel.add(userCombo);
-            panel.add(new JLabel("Select Chat:"));
-            panel.add(chatCombo);
-
-            int result = JOptionPane.showConfirmDialog(
-                    this, panel,
-                    subscribe ? "Subscribe User" : "Unsubscribe User",
-                    JOptionPane.OK_CANCEL_OPTION);
-
-            if (result == JOptionPane.OK_OPTION) {
-                User user = (User) userCombo.getSelectedItem();
-                Chat chat = (Chat) chatCombo.getSelectedItem();
-
-                if (subscribe) {
-                    //chatService.subscribeUserToChat(user.getUser_id(), chat.getChatId());
-                } else {
-                    //chatService.unsubscribeUserFromChat(user.getUser_id(), chat.getChatId());
-                }
-
-                JOptionPane.showMessageDialog(this,
-                        "Operation completed successfully!");
-                loadData();
-            }
-        } catch (RemoteException e) {
-            showError("Operation failed: " + e.getMessage());
-        }
-    }
-
-    private void removeUser(JTable userTable) {
+    private void removeUser() {
         try {
             int selectedRow = userTable.getSelectedRow();
             if (selectedRow == -1) {
@@ -232,7 +228,7 @@ public class AdminDashboardUI extends JFrame {
 
     private void loadData() {
         try {
-            // User table model
+            // Load users
             List<User> users = userService.getAllUsers();
             String[] userColumns = {"User ID", "Username", "Email"};
             DefaultTableModel userModel = new DefaultTableModel(userColumns, 0);
@@ -243,25 +239,22 @@ public class AdminDashboardUI extends JFrame {
                         user.getEmail()
                 });
             }
-
-            // Chat table model
-            List<Chat> chats = chatService.getAllChats();
-            String[] chatColumns = {"Chat ID", "Chat Name", "Description"};
-            DefaultTableModel chatModel = new DefaultTableModel(chatColumns, 0);
-            for (Chat chat : chats) {
-                chatModel.addRow(new Object[]{
-                        chat.getChatId(),
-                        chat.getChatName(),
-                        chat.getDescription()
-                });
-            }
-
-            // Update tables
-            JTable userTable = (JTable) ((JScrollPane) ((JPanel) ((JTabbedPane) getContentPane().getComponent(0)).getComponent(0)).getComponent(0)).getViewport().getView();
             userTable.setModel(userModel);
 
-            JTable chatTable = (JTable) ((JScrollPane) ((JPanel) ((JTabbedPane) getContentPane().getComponent(0)).getComponent(1)).getComponent(0)).getViewport().getView();
-            chatTable.setModel(chatModel);
+            // Load chats only if chatTable is initialized
+            if (chatTable != null) {  // Add null check for safety
+                List<Chat> chats = chatService.getAllChats();
+                String[] chatColumns = {"Chat ID", "Chat Name", "Description"};
+                DefaultTableModel chatModel = new DefaultTableModel(chatColumns, 0);
+                for (Chat chat : chats) {
+                    chatModel.addRow(new Object[]{
+                            chat.getChatId(),
+                            chat.getChatName(),
+                            chat.getDescription()
+                    });
+                }
+                chatTable.setModel(chatModel);
+            }
 
         } catch (RemoteException e) {
             showError("Failed to load data: " + e.getMessage());
@@ -274,7 +267,6 @@ public class AdminDashboardUI extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // For testing purposes
             try {
                 Registry registry = LocateRegistry.getRegistry("localhost", 55545);
                 UserService userService = (UserService) registry.lookup("UserService");

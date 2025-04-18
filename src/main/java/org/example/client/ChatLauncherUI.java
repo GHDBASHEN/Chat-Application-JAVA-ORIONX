@@ -144,7 +144,7 @@ public class ChatLauncherUI extends JFrame {
                     new AdminDashboardUI(user.getUsername(), userService, chatService);
                 }
                  else {
-                    new UserDashboardUI(user.getUsername(),userService, chatService);
+                    new userDashBoard(chatService, userService, logService, chatLog).handle(user);
                 }
                                 // Close login window
             } else {
@@ -155,130 +155,6 @@ public class ChatLauncherUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Login error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-
-//    private void openChatWindow(User user, Chat chat) throws Exception {
-//        JFrame chatFrame = new JFrame("Chat - " + user.getEmail());
-//        chatFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-//        chatFrame.setSize(600, 500);
-//        chatFrame.setLocationRelativeTo(null);
-//
-//        JPanel mainPanel = new JPanel(new BorderLayout());
-//        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-//
-//        // Header panel
-//        JPanel headerPanel = new JPanel(new BorderLayout());
-//        headerPanel.setBackground(new Color(101, 248, 74));
-//        headerPanel.setBorder(BorderFactory.createCompoundBorder(
-//                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(95, 225, 71)),
-//                BorderFactory.createEmptyBorder(10, 15, 10, 15)));
-//
-//        JLabel headerLabel = new JLabel("Chat Room - " + user.getEmail());
-//        headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-//        headerPanel.add(headerLabel, BorderLayout.WEST);
-//
-//        JLabel timeLabel = new JLabel(LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM dd, hh:mm a")));
-//        timeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-//        timeLabel.setForeground(new Color(184, 47, 193));
-//        headerPanel.add(timeLabel, BorderLayout.EAST);
-//
-//        // Chat area
-//        JTextArea chatArea = new JTextArea();
-//        chatArea.setEditable(false);
-//        chatArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-//        chatArea.setLineWrap(true);
-//        chatArea.setWrapStyleWord(true);
-//        JScrollPane scrollPane = new JScrollPane(chatArea);
-//        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-//
-//        // Input panel
-//        JPanel inputPanel = new JPanel(new BorderLayout());
-//        inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-//
-//        JTextField inputField = new JTextField();
-//        inputField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-//        inputField.setBorder(BorderFactory.createCompoundBorder(
-//                BorderFactory.createLineBorder(new Color(200, 200, 200)),
-//                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
-//
-//        JButton sendButton = new JButton("Send");
-//        styleButton(sendButton, new Color(33, 150, 243));
-//        sendButton.setPreferredSize(new Dimension(100, 40));
-//
-//        inputPanel.add(inputField, BorderLayout.CENTER);
-//        inputPanel.add(sendButton, BorderLayout.EAST);
-//
-//        mainPanel.add(headerPanel, BorderLayout.NORTH);
-//        mainPanel.add(scrollPane, BorderLayout.CENTER);
-//        mainPanel.add(inputPanel, BorderLayout.SOUTH);
-//
-//        // Chat functionality
-//        ChatObserver observer = new ChatObserver() {
-//            public void notifyNewMessage(String message) throws RemoteException {
-//                SwingUtilities.invokeLater(() -> {
-//                    chatArea.append(message + "\n");
-//                    chatArea.setCaretPosition(chatArea.getDocument().getLength());
-//                });
-//            }
-//        };
-//
-//        ChatObserver stub = (ChatObserver) UnicastRemoteObject.exportObject(observer, 0);
-//
-//        try {
-//            chatLog = logService.login(user.getUser_id(), chat.getChatId());
-//            chatService.subscribeUserToChat(user.getUser_id(), chat.getChatId());
-//        } catch (RemoteException e) {
-//            JOptionPane.showMessageDialog(this, "Failed to join chat");
-//            return;
-//        }
-//
-//        sendButton.addActionListener(ev -> {
-//            try {
-//                String msg = inputField.getText().trim();
-//                if (!msg.isEmpty()) {
-//                    chatService.sendMessageToChat(
-//                            chat.getChatId(),
-//                            user.getUsername() + ": " + msg
-//                    );
-//                    inputField.setText("");
-//                }
-//            } catch (RemoteException ex) {
-//                ex.printStackTrace();
-//            }
-//        });
-//
-//        chatFrame.addWindowListener(new java.awt.event.WindowAdapter() {
-//            @Override
-//            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-//                try {
-//                    chatService.unsubscribeUserFromChat(user.getUser_id(), chat.getChatId());
-//                    logService.logout(user.getUser_id(), chat.getChatId());
-//                } catch (RemoteException ex) {
-//                    ex.printStackTrace();
-//                }
-//            }
-//        });
-//
-//        chatFrame.add(mainPanel);
-//        chatFrame.setVisible(true);
-//    }
-//
-//    private void handleMessageSend(JTextField inputField, User user, ChatObserver stub, Chat chat) {
-//        try {
-//            String msg = inputField.getText().trim();
-//            if (!msg.isEmpty()) {
-//                if (logService.isUserOnline(user.getUser_id(), chat.getChatId())) {
-//                    chatService.sendMessage(msg, user);
-//                }
-//                if (msg.equalsIgnoreCase("Bye")) {
-//                    chatLog = logService.logout(user.getUser_id(), chat.getChatId());
-//                    chatService.unsubscribe(user, stub, chatLog);
-//                }
-//                inputField.setText("");
-//            }
-//        } catch (RemoteException ex) {
-//            ex.printStackTrace();
-//        }
-//    }
 
     public static void main(String[] args) {
         try {
