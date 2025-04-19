@@ -8,6 +8,7 @@ import java.rmi.registry.Registry;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.example.client.admin.AdminDashboardUI;
 import org.example.client.user.userDashBoard;
 import org.example.domain.ChatLog;
 import org.example.domain.User;
@@ -143,7 +144,6 @@ public class ChatLauncherUI extends JFrame {
                     new AdminDashboardUI(user.getUsername(), userService, chatService);
                 } else {
                     new userDashBoard(chatService, userService, logService, chatLog).handle(user);
-                    //new UserChatWindow(chatService, userService, logService, chatLog).openUserWindow(user);
                 }
                 dispose(); // Close login window
             } else {

@@ -145,7 +145,9 @@ public class ChatLauncherUI extends JFrame {
                 } else {
                     new userDashBoard(chatService, userService, logService, chatLog).handle(user);
                 }
-                dispose(); // Close login window
+                
+                dispose();
+                //
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid credentials!", "Error", JOptionPane.ERROR_MESSAGE);
             }
