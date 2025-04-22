@@ -1,6 +1,10 @@
 package org.example.server.impl;
 import org.example.domain.*;
 import org.example.rmi.*;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.time.format.DateTimeFormatter;
@@ -9,17 +13,65 @@ import java.util.List;
 
 public class ChatServiceImpl extends UnicastRemoteObject implements ChatService {
     private List<ChatObserver> observers = new ArrayList<>();
+    private final SessionFactory sessionFactory;
+    public ChatServiceImpl(SessionFactory sessionFactory) throws RemoteException {
+        this.sessionFactory = sessionFactory;
+    }
+    @Override
+    public User getUserByUsername(String username) throws RemoteException {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("FROM User WHERE username = :username", User.class)
+                    .setParameter("username", username)
+                    .uniqueResult();
+        } catch (Exception e) {
+            throw new RemoteException("Error finding user", e);
+        }
+    }
 
-    public ChatServiceImpl() throws RemoteException {}
+    // ChatServiceImpl.java
+    @Override
+    public void createChat(ChatGroup chat) throws RemoteException {
+        try (Session session = sessionFactory.openSession()) {
+            Transaction tx = session.beginTransaction();
+            session.persist(chat);
+            tx.commit();
+            System.out.println("Chat created: " + chat.getChatName()); // Log success
+        } catch (Exception e) {
+            System.err.println("Error creating chat: " + e.getMessage()); // Log error
+            throw new RemoteException("Error creating chat", e);
+        }
+    }
 
     @Override
-    public void createChat(Chat chat) throws RemoteException {
+    public void subscribeToChat(int userId, int chatId) throws RemoteException {
 
     }
 
     @Override
-    public List<Chat> getAllChats() throws RemoteException {
+    public void unsubscribeFromChat(int userId, int chatId) throws RemoteException {
+
+    }
+
+    @Override
+    public List<Message> getChatMessages(int chatId) throws RemoteException {
         return List.of();
+    }
+
+    @Override
+    public void sendMessage(Message message) throws RemoteException {
+
+    }
+
+    @Override
+    public List<ChatGroup> getAllChats() throws RemoteException {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery(
+                    "SELECT c FROM ChatGroup c LEFT JOIN FETCH c.admin",
+                    ChatGroup.class
+            ).list();
+        } catch (Exception e) {
+            throw new RemoteException("Error fetching chats", e);
+        }
     }
 
     @Override
