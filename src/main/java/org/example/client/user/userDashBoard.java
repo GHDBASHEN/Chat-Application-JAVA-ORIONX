@@ -151,6 +151,12 @@ public class userDashBoard {
     public void handle(User user) throws Exception {
         this.currentUser = user;
 
+        JFrame frame = new JFrame("User Dashboard");
+        frame.setContentPane(main);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+
+        // Now UI components should be initialized
         userName.setText("Hello, "+user.getUsername() + "\uD83D\uDE09");
 
         // Initialize profile update UI
@@ -166,11 +172,7 @@ public class userDashBoard {
         chatLog = logService.login(user.getUser_id());
         chatService.subscribe(user, stub, chatLog);
 
-
-        JFrame frame = new JFrame("User Dashboard");
-        frame.setContentPane(main);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
+        // Make the frame visible after all setup is done
         frame.setVisible(true);
 
 

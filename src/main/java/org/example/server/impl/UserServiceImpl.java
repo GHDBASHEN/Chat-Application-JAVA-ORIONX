@@ -21,7 +21,7 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
     public void updateUser(User user) throws RemoteException {
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            session.update(user);
+            session.saveOrUpdate(user);
             session.getTransaction().commit();
         } catch (Exception e) {
             throw new RemoteException("Error updating user", e);
