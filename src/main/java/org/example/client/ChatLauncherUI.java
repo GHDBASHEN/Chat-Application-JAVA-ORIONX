@@ -21,9 +21,11 @@ public class ChatLauncherUI extends JFrame {
     private JPasswordField passwordField;
     private JButton loginButton;
     private ChatService chatService;
-    private UserService userService;
+    private static UserService userService;
     private ChatLogService logService;
     private ChatLog chatLog;
+    private static JButton registerButton;
+
 
     public ChatLauncherUI() {
         initUI();
@@ -74,6 +76,18 @@ public class ChatLauncherUI extends JFrame {
         loginButton = new JButton("Login");
         styleButton(loginButton, new Color(183, 59, 198));
 
+        //fro register
+        registerButton = new JButton("Register");
+        styleButton(registerButton, new Color(0, 150, 136));
+
+        registerButton.addActionListener(e -> {
+            new RegisterUI(userService);
+        });
+
+
+
+
+
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
@@ -96,6 +110,10 @@ public class ChatLauncherUI extends JFrame {
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         loginPanel.add(loginButton, gbc);
+
+        //for register
+        gbc.gridy++;
+        loginPanel.add(registerButton, gbc);
 
         mainPanel.add(loginPanel, BorderLayout.CENTER);
         add(mainPanel);
@@ -165,6 +183,7 @@ public class ChatLauncherUI extends JFrame {
 
         SwingUtilities.invokeLater(() -> new ChatLauncherUI());
 
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 List<ChatLog> chatLogs = new ChatLogServiceImpl().getChatLogsWithNullEndTime();
@@ -178,5 +197,7 @@ public class ChatLauncherUI extends JFrame {
                 ex.printStackTrace();
             }
         }));
+
+
     }
 }

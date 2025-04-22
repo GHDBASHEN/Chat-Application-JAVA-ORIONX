@@ -59,4 +59,20 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
             throw new RemoteException("Authentication error", e);
         }
     }
+
+    @Override
+    public boolean registerUser(User newUser) {
+        try {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            session.save(newUser);
+            session.getTransaction().commit();
+            return true;    // User registered successfully
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
 }

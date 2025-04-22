@@ -11,6 +11,15 @@
             <array />
           </option>
         </State>
+        <State>
+          <option name="id" value="10033da2-e392-42ad-bace-7ec7520dcb6b" />
+          <option name="name" value="DDL data source" />
+          <option name="dbmsName" value="UNKNOWN" />
+          <option name="urls">
+            <array />
+          </option>
+          <option name="outLayout" value="File per object by schema.groovy" />
+        </State>
       </list>
     </option>
   </component>
