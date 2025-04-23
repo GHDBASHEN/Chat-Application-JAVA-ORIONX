@@ -1,0 +1,4 @@
+package org.example.rmi;
+
+public interface SubscriptionService {
+}
