@@ -6,7 +6,9 @@ import java.util.List;
 
 public interface UserService extends Remote {
     List<User> getAllUsers() throws RemoteException;  // Add this
-    void deleteUser(Long userId) throws RemoteException;     User getUser(int id) throws RemoteException;
+    void deleteUser(int userId) throws RemoteException;
+
+    User getUser(int id) throws RemoteException;
     User checkEmailAndPassword(String email, String password) throws RemoteException;
 
 }
