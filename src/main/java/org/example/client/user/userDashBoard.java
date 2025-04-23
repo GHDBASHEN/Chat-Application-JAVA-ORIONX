@@ -12,6 +12,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
 
 public class userDashBoard {
     private JPanel topPanel;
@@ -27,35 +28,26 @@ public class userDashBoard {
     private JButton sendButton;
     private JLabel userName;
     private JScrollPane groupList;
+    private JPanel groupButtonPanel; // panel inside groupList
+
+
     private ChatService chatService;
     private UserService userService;
     private ChatLogService logService;
     private ChatLog chatLog;
-    private JPanel groupButtonPanel; // panel inside groupList
+    private User user;
 
-    public userDashBoard(ChatService chatService, UserService userService, ChatLogService logService, ChatLog chatLog) {
+    public userDashBoard(ChatService chatService, UserService userService, ChatLogService logService, ChatLog chatLog, User user) {
         this.chatService = chatService;
         this.userService = userService;
         this.logService = logService;
         this.chatLog = chatLog;
+        this.user = user;
 
-        // display all groups START
-        this.groupButtonPanel = new JPanel();
-        groupButtonPanel.setLayout(new BoxLayout(groupButtonPanel, BoxLayout.Y_AXIS));
-        groupList.setViewportView(groupButtonPanel);
-
-        // Example buttons
-        for (int i = 1; i <= 5; i++) {
-            JButton groupButton = new JButton("Group " + i);
-            groupButtonPanel.add(groupButton);
-        }
-
-        groupButtonPanel.revalidate();
-        groupButtonPanel.repaint();
-        // display all groups END
+        loadUserGroups(user); // display all groups
     }
 
-    public void handle(User user) throws Exception {
+    public void handle() throws Exception {
 
         userName.setText("Hello, "+user.getUsername() + "\uD83D\uDE09");
         ChatObserver observer = new ChatObserver() {
@@ -132,5 +124,30 @@ public class userDashBoard {
         });
 
     }
+
+    private void loadUserGroups(User user) {
+    try {
+        groupButtonPanel = new JPanel();
+        groupButtonPanel.setLayout(new BoxLayout(groupButtonPanel, BoxLayout.Y_AXIS));
+        groupList.setViewportView(groupButtonPanel);
+        List<String> groupNames = userService.getGroupNamesByUserId(user.getUser_id());
+
+        groupButtonPanel.removeAll(); // Clear existing buttons
+        for (String groupName : groupNames) {
+            JButton groupBtn = new JButton(groupName);
+            groupBtn.addActionListener(e -> {
+                JOptionPane.showMessageDialog(null, "Group: " + groupName);
+                // Optional: Load group chat window
+            });
+            groupButtonPanel.add(groupBtn);
+        }
+        groupButtonPanel.revalidate();
+        groupButtonPanel.repaint();
+
+    } catch (RemoteException e) {
+        e.printStackTrace();
+    }
+}
+
 
 }

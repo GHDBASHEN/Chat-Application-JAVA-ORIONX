@@ -145,7 +145,7 @@ public class ChatLauncherUI extends JFrame {
                     new AdminDashboardUI(adminUser, userService, chatService);
                 }
                  else {
-                    new userDashBoard(chatService, userService, logService, chatLog).handle(user);
+                    new userDashBoard(chatService, userService, logService, chatLog, user).handle();
                 }
                 dispose();
 
