@@ -103,9 +103,11 @@ public class AdminDashboardUI extends JFrame {
         buttonPanel.setOpaque(false);
 
         JButton createChatBtn = createActionButton("Create Chat", "➕", this::createChat);
+        JButton createChatUserBtn = createActionButton("Create Chat Users", "➕", this::createChatUser);
         JButton refreshBtn = createActionButton("Refresh", "🔄", this::loadData);
 
         buttonPanel.add(createChatBtn);
+        buttonPanel.add(createChatUserBtn);
         buttonPanel.add(refreshBtn);
 
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -154,6 +156,51 @@ public class AdminDashboardUI extends JFrame {
             }
         }
     }
+
+    private void createChatUser() {
+        try {
+            // Fetch users and chat groups
+            List<User> users = chatService.getAllUsers();
+            List<ChatGroup> chatGroups = chatService.getAllChats();
+
+            // Prepare combo boxes
+            JComboBox<User> userComboBox = new JComboBox<>(users.toArray(new User[0]));
+            JComboBox<ChatGroup> groupComboBox = new JComboBox<>(chatGroups.toArray(new ChatGroup[0]));
+
+            // Render names instead of object toString
+            userComboBox.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
+                return new JLabel(value != null ? value.getUsername() + " (ID: " + value.getUser_id() + ")" : "");
+            });
+
+            groupComboBox.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
+                return new JLabel(value != null ? value.getChatName() + " (ID: " + value.getChatId() + ")" : "");
+            });
+
+            JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+            panel.add(new JLabel("Select User:"));
+            panel.add(userComboBox);
+            panel.add(new JLabel("Select Chat Group:"));
+            panel.add(groupComboBox);
+
+            int result = JOptionPane.showConfirmDialog(this, panel, "Assign User to Group", JOptionPane.OK_CANCEL_OPTION);
+
+            if (result == JOptionPane.OK_OPTION) {
+                User selectedUser = (User) userComboBox.getSelectedItem();
+                ChatGroup selectedGroup = (ChatGroup) groupComboBox.getSelectedItem();
+
+                if (selectedUser != null && selectedGroup != null) {
+                    chatService.addUserToGroup(selectedUser.getUser_id(), selectedGroup.getChatId());
+                    JOptionPane.showMessageDialog(this, "User added to group successfully!");
+                    loadData();
+                } else {
+                    showError("You must select both user and group.");
+                }
+            }
+        } catch (RemoteException e) {
+            showError("Failed to load data: " + e.getMessage());
+        }
+    }
+
 
     private void removeUser() {
         try {

@@ -3,6 +3,7 @@ import org.example.domain.*;
 import org.example.rmi.*;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -27,12 +28,17 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
         }
     }
 
+    // ChatServiceImpl.java
     @Override
-    public void createChat(ChatGroup chatGroup) throws RemoteException {
+    public void createChat(ChatGroup chat) throws RemoteException {
         try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.persist(chatGroup);
-            session.getTransaction().commit();
+            Transaction tx = session.beginTransaction();
+            session.persist(chat);
+            tx.commit();
+            System.out.println("Chat created: " + chat.getChatName()); // Log success
+        } catch (Exception e) {
+            System.err.println("Error creating chat: " + e.getMessage()); // Log error
+            throw new RemoteException("Error creating chat", e);
         }
     }
 

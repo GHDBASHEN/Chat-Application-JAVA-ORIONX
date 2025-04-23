@@ -139,9 +139,9 @@ public class ChatLauncherUI extends JFrame {
 
         try {
             User user = userService.checkEmailAndPassword(email, password);
-            User adminUser = userService.getUserByUsername("admin");
             if (user != null) {
                 if (user.getRole().equalsIgnoreCase("admin")) {
+                    User adminUser = userService.getUserByUsername(user.getUsername());
                     new AdminDashboardUI(adminUser, userService, chatService);
                 }
                  else {

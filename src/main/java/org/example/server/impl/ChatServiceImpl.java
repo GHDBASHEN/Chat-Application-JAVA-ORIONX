@@ -101,6 +101,52 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
         notifyAllObservers(user.getNickname() + " left: " + formattedTime);
     }
 
+    @Override
+    public List<User> getAllUsers() throws RemoteException {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("FROM User", User.class).list();
+        } catch (Exception e) {
+            throw new RemoteException("Error fetching users", e);
+        }
+    }
+
+    @Override
+    public void addUserToGroup(int userId, int groupId) throws RemoteException {
+        Transaction tx = null;
+        try (Session session = sessionFactory.openSession()) {
+            tx = session.beginTransaction();
+
+            User user = session.get(User.class, userId);
+            ChatGroup chatGroup = session.get(ChatGroup.class, groupId);
+
+            if (user == null || chatGroup == null) {
+                throw new RemoteException("User or Chat Group not found");
+            }
+
+            ChatUserId id = new ChatUserId(userId, groupId);
+
+            // Avoid duplicate entry
+            ChatUser existing = session.get(ChatUser.class, id);
+            if (existing != null) {
+                throw new RemoteException("User is already in the group");
+            }
+
+            ChatUser chatUser = new ChatUser();
+            chatUser.setId(id);
+            chatUser.setUser(user);
+            chatUser.setChatGroup(chatGroup);
+
+            session.persist(chatUser);
+            tx.commit();
+
+            System.out.println("User added to group successfully");
+        } catch (Exception e) {
+            if (tx != null) tx.rollback();
+            throw new RemoteException("Error adding user to group", e);
+        }
+    }
+
+
     private void notifyAllObservers(String message) {
         observers.forEach(obs -> {
             try { obs.notifyNewMessage(message); }
