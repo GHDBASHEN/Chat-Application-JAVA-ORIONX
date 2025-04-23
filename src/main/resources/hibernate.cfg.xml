@@ -14,7 +14,7 @@
         <property name="show_sql">true</property>
         <property name="format_sql">true</property>
         <mapping class="org.example.domain.User"/>
-        <mapping class="org.example.domain.ChatMessage"/>
         <mapping class="org.example.domain.ChatLog"/>
+        <mapping class="org.example.domain.ChatGroup"/>
     </session-factory>
 </hibernate-configuration>

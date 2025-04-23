@@ -150,7 +150,7 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
         // Get the formatted time
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
         String formattedTime = chatLog.getEnd_time().format(formatter);
-        sendMessage(user.getNickname() + " left: " + formattedTime, user, chatId);
+        sendMessage(user.getNickname() + " joined: " + formattedTime, user, chatId);
         notifyAllObservers(user.getNickname() + " left: " + formattedTime, chatId);
     }
 

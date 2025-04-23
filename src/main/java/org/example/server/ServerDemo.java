@@ -1,5 +1,6 @@
 package org.example.server;
 import org.example.domain.ChatGroup;
+import org.example.domain.ChatMessage;
 import org.example.domain.ChatUser;
 import org.example.domain.User;
 import org.example.rmi.ChatLogService;
@@ -22,6 +23,7 @@ public class ServerDemo {
             configuration.addAnnotatedClass(User.class);
             configuration.addAnnotatedClass(ChatUser.class);
             configuration.addAnnotatedClass(ChatGroup.class);
+            configuration.addAnnotatedClass(ChatMessage.class);
             SessionFactory sessionFactory = configuration.buildSessionFactory();
             ChatService chatService = new ChatServiceImpl(sessionFactory);
             UserService userService = new UserServiceImpl(sessionFactory);
