@@ -75,30 +75,30 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
     }
 
     @Override
-    public void sendMessage(String message, User sender) throws RemoteException {
+    public void sendMessage(String message, User sender, int chatId) throws RemoteException {
         // Save to DB (add your Hibernate code here)
 
-        notifyAllObservers(sender.getNickname() + ": " + message);
+        notifyAllObservers(sender.getNickname() + ": " + message, chatId);
     }
 
     @Override
-    public void subscribe(User user, ChatObserver observer, ChatLog chatLog) throws RemoteException {
+    public void subscribe(User user, ChatObserver observer, ChatLog chatLog, int chatId) throws RemoteException {
         observers.add(observer);
 
         // Get the formatted time
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
         String formattedTime = chatLog.getStart_time().format(formatter);
-        notifyAllObservers(user.getNickname() + " joined: "+ formattedTime); // Send message to all observers
+        notifyAllObservers(user.getNickname() + " joined: "+ formattedTime, chatId); // Send message to all observers
     }
 
     @Override
-    public void unsubscribe(User user, ChatObserver observer, ChatLog chatLog) throws RemoteException {
+    public void unsubscribe(User user, ChatObserver observer, ChatLog chatLog, int chatId) throws RemoteException {
         observers.remove(observer);
 
         // Get the formatted time
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
         String formattedTime = chatLog.getEnd_time().format(formatter);
-        notifyAllObservers(user.getNickname() + " left: " + formattedTime);
+        notifyAllObservers(user.getNickname() + " left: " + formattedTime, chatId);
     }
 
     @Override
@@ -147,9 +147,9 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
     }
 
 
-    private void notifyAllObservers(String message) {
+    private void notifyAllObservers(String message, int chatId) {
         observers.forEach(obs -> {
-            try { obs.notifyNewMessage(message); }
+            try { obs.notifyNewMessage(message, chatId); }
             catch (RemoteException e) { e.printStackTrace(); }
         });
 

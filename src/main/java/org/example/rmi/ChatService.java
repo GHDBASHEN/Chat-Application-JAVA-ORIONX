@@ -15,9 +15,9 @@ public interface ChatService extends Remote {
 //    void subscribeUserToChat(int userId, int chatId) throws RemoteException;
 //    void unsubscribeUserFromChat(int userId, int chatId) throws RemoteException;
 //    void sendMessageToChat(int chatId, String message) throws RemoteException;
-    void sendMessage(String message, User sender) throws RemoteException;
-    void subscribe(User user, ChatObserver observer, ChatLog chatLog) throws RemoteException;
-    void unsubscribe(User user, ChatObserver observer, ChatLog chatLog) throws RemoteException;
+    void sendMessage(String message, User sender, int chatId) throws RemoteException;
+    void subscribe(User user, ChatObserver observer, ChatLog chatLog, int chatId) throws RemoteException;
+    void unsubscribe(User user, ChatObserver observer, ChatLog chatLog, int chatId) throws RemoteException;
 
     User getUserByUsername(String username) throws RemoteException;
 

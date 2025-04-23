@@ -1,5 +1,6 @@
 package org.example.server.impl;
 
+import org.example.domain.ChatGroup;
 import org.example.domain.User;
 import org.example.rmi.UserService;
 import org.hibernate.Session;
@@ -72,15 +73,26 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
     }
 
     @Override
-    public List<String> getGroupNamesByUserId(int userId) throws RemoteException {
-        System.out.println("Hsusususu"+userId);
+//    public List<ChatGroup> getGroupDataByUserId(int userId) throws RemoteException {
+//        System.out.println("Hsusususu"+userId);
+//        try (Session session = sessionFactory.openSession()) {
+//            String hql = "SELECT cu.chatGroup.chatName, cu.chatGroup.chatId FROM ChatUser cu WHERE cu.user.user_id= :userId";
+//            return session.createQuery(hql, ChatGroup.class)
+//                    .setParameter("userId", userId)
+//                    .list();
+//        } catch (Exception e) {
+//            throw new RemoteException("Error fetching group names for user", e);
+//        }
+//    }
+    public List<ChatGroup> getGroupDataByUserId(int userId) throws RemoteException {
+        System.out.println("Fetching groups for user ID: " + userId);
         try (Session session = sessionFactory.openSession()) {
-            String hql = "SELECT cu.chatGroup.chatName FROM ChatUser cu WHERE cu.user.user_id= :userId";
-            return session.createQuery(hql, String.class)
+            String hql = "SELECT cu.chatGroup FROM ChatUser cu WHERE cu.user.user_id = :userId";
+            return session.createQuery(hql, ChatGroup.class)
                     .setParameter("userId", userId)
                     .list();
         } catch (Exception e) {
-            throw new RemoteException("Error fetching group names for user", e);
+            throw new RemoteException("Error fetching group data for user", e);
         }
     }
 

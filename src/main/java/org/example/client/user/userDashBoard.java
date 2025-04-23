@@ -1,5 +1,6 @@
 package org.example.client.user;
 
+import org.example.domain.ChatGroup;
 import org.example.domain.ChatLog;
 import org.example.domain.User;
 import org.example.rmi.ChatLogService;
@@ -36,6 +37,7 @@ public class userDashBoard {
     private ChatLogService logService;
     private ChatLog chatLog;
     private User user;
+    private ChatGroup chatGroup;
 
     public userDashBoard(ChatService chatService, UserService userService, ChatLogService logService, ChatLog chatLog, User user) {
         this.chatService = chatService;
@@ -45,21 +47,35 @@ public class userDashBoard {
         this.user = user;
 
         loadUserGroups(user); // display all groups
+
+        // auto-select first chat group if available
+        try {
+            List<ChatGroup> groups = userService.getGroupDataByUserId(user.getUser_id());
+            if (!groups.isEmpty()) {
+                chatGroup = groups.get(0);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     public void handle() throws Exception {
 
         userName.setText("Hello, "+user.getUsername() + "\uD83D\uDE09");
         ChatObserver observer = new ChatObserver() {
-            public void notifyNewMessage(String message) throws RemoteException {
-                SwingUtilities.invokeLater(() -> textArea1.append(message + "\n"));
+            public void notifyNewMessage(String message, int chatId) throws RemoteException {
+                System.out.println("Int: "+chatId+"  Object: "+chatGroup.getChatId());
+                if(chatId == chatGroup.getChatId()){
+                    SwingUtilities.invokeLater(() -> textArea1.append(message + "\n"));
+                }
+
             }
         };
 
         // add observer to the list [add new user]
         ChatObserver stub = (ChatObserver) UnicastRemoteObject.exportObject(observer, 0);
         chatLog = logService.login(user.getUser_id());
-        chatService.subscribe(user, stub, chatLog);
+        chatService.subscribe(user, stub, chatLog, chatGroup.getChatId());
 
 
         JFrame frame = new JFrame("User Dashboard");
@@ -90,14 +106,14 @@ public class userDashBoard {
                     String msg = msgFeild.getText().trim();
                     if (!msg.isEmpty()) {
                         if (logService.isUserOnline(user.getUser_id())) {
-                            chatService.sendMessage(msg, user);
+                            chatService.sendMessage(msg, user, chatGroup.getChatId());
                         } else {
                             System.out.println("User session has ended. Cannot send message.");
                         }
 
                         if (msg.equalsIgnoreCase("Bye")) {
                             chatLog = logService.logout(user.getUser_id());
-                            chatService.unsubscribe(user, stub, chatLog);
+                            chatService.unsubscribe(user, stub, chatLog, chatGroup.getChatId());
                         }
 
                         msgFeild.setText("");
@@ -114,7 +130,7 @@ public class userDashBoard {
                 try {
                     chatLog = logService.logout(user.getUser_id());
                     if (chatLog != null) {
-                        chatService.unsubscribe(user, stub, chatLog);
+                        chatService.unsubscribe(user, stub, chatLog, chatGroup.getChatId());
                         System.out.println("User logged out and unsubscribed.");
                     }
                 } catch (RemoteException e) {
@@ -130,14 +146,17 @@ public class userDashBoard {
         groupButtonPanel = new JPanel();
         groupButtonPanel.setLayout(new BoxLayout(groupButtonPanel, BoxLayout.Y_AXIS));
         groupList.setViewportView(groupButtonPanel);
-        List<String> groupNames = userService.getGroupNamesByUserId(user.getUser_id());
+        //List<String> groupNames = userService.getGroupDataByUserId(user.getUser_id());
+        List<ChatGroup> groups = userService.getGroupDataByUserId(user.getUser_id());
 
         groupButtonPanel.removeAll(); // Clear existing buttons
-        for (String groupName : groupNames) {
-            JButton groupBtn = new JButton(groupName);
+        for (ChatGroup group : groups) {
+            JButton groupBtn = new JButton(group.getChatName());
             groupBtn.addActionListener(e -> {
-                JOptionPane.showMessageDialog(null, "Group: " + groupName);
+                chatGroup = group;
                 // Optional: Load group chat window
+                //JOptionPane.showMessageDialog(null, "Opened chat for: " + groupName);
+                tabbedPane1.setSelectedComponent(chatPane);
             });
             groupButtonPanel.add(groupBtn);
         }

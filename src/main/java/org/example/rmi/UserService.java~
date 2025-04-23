@@ -10,9 +10,8 @@ public interface UserService extends Remote {
     void deleteUser(int userId) throws RemoteException;
 
     User getUser(int id) throws RemoteException;
-    User getUser() throws RemoteException;
     User checkEmailAndPassword(String email, String password) throws RemoteException;
-    List<String> getGroupNamesByUserId(int userId) throws RemoteException;
+    List<String> getGroupDataByUserId(int userId) throws RemoteException;
 
 
 }
