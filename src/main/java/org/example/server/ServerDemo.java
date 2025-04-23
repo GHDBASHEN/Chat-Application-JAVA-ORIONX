@@ -1,4 +1,5 @@
 package org.example.server;
+import org.example.domain.ChatGroup;
 import org.example.domain.User;
 import org.example.rmi.ChatLogService;
 import org.example.rmi.ChatService;
@@ -18,8 +19,9 @@ public class ServerDemo {
             Configuration configuration = new Configuration();
             configuration.configure("hibernate.cfg.xml");
             configuration.addAnnotatedClass(User.class);
+            configuration.addAnnotatedClass(ChatGroup.class);
             SessionFactory sessionFactory = configuration.buildSessionFactory();
-            ChatService chatService = new ChatServiceImpl();
+            ChatService chatService = new ChatServiceImpl(sessionFactory);
             UserService userService = new UserServiceImpl(sessionFactory);
             ChatLogService logService = new ChatLogServiceImpl();
 
