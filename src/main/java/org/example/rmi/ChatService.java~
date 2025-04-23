@@ -28,6 +28,7 @@ public interface ChatService extends Remote {
     void sendMessage(Message message) throws RemoteException;
 
     List<User> getAllUsers() throws RemoteException;
+    List<ChatGroup> getAllChatGroups() throws RemoteException;
 
     void addUserToGroup(int userId, int groupId) throws RemoteException;
 }
