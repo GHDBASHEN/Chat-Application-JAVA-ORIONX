@@ -5,6 +5,7 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 public interface UserService extends Remote {
+    User getUserByUsername(String username) throws RemoteException;
     List<User> getAllUsers() throws RemoteException;  // Add this
     void deleteUser(int userId) throws RemoteException;
 
@@ -12,4 +13,9 @@ public interface UserService extends Remote {
     User checkEmailAndPassword(String email, String password) throws RemoteException;
 
     boolean registerUser(User user) throws RemoteException;
+
+
+    void updateUser(User user) throws RemoteException;
 }
+
+

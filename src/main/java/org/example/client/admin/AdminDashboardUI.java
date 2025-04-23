@@ -1,6 +1,6 @@
 package org.example.client.admin;
 
-import org.example.domain.Chat;
+import org.example.domain.ChatGroup;
 import org.example.domain.User;
 import org.example.rmi.ChatService;
 import org.example.rmi.UserService;
@@ -16,17 +16,15 @@ import java.util.List;
 public class AdminDashboardUI extends JFrame {
     private final UserService userService;
     private final ChatService chatService;
-    private final String adminUsername;
+    private final User currentAdminUser;
 
     private JTable userTable;
     private JTable chatTable;
-    private JTabbedPane tabbedPane;
 
-
-    public AdminDashboardUI(String username, UserService userService, ChatService chatService) {
+    public AdminDashboardUI(User adminUser, UserService userService, ChatService chatService) {
+        this.currentAdminUser = adminUser;
         this.userService = userService;
         this.chatService = chatService;
-        this.adminUsername = username;
         initializeUI();
         loadData();
     }
@@ -61,7 +59,8 @@ public class AdminDashboardUI extends JFrame {
         title.setFont(new Font("Segoe UI", Font.BOLD, 24));
         title.setForeground(new Color(33, 150, 243));
 
-        JLabel welcome = new JLabel("Welcome, " + adminUsername);
+        String username = (currentAdminUser != null) ? currentAdminUser.getUsername() : "Admin";
+        JLabel welcome = new JLabel("Welcome, " + username);
         welcome.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         welcome.setForeground(new Color(120, 120, 120));
 
@@ -104,13 +103,11 @@ public class AdminDashboardUI extends JFrame {
         buttonPanel.setOpaque(false);
 
         JButton createChatBtn = createActionButton("Create Chat", "➕", this::createChat);
-      //  JButton subscribeBtn = createActionButton("Subscribe User", "🔗", () -> manageSubscription(true));
-      //  JButton unsubscribeBtn = createActionButton("Unsubscribe User", "🔓", () -> manageSubscription(false));
+        JButton createChatUserBtn = createActionButton("Create Chat Users", "➕", this::createChatUser);
         JButton refreshBtn = createActionButton("Refresh", "🔄", this::loadData);
 
         buttonPanel.add(createChatBtn);
-      //  buttonPanel.add(subscribeBtn);
-      //  buttonPanel.add(unsubscribeBtn);
+        buttonPanel.add(createChatUserBtn);
         buttonPanel.add(refreshBtn);
 
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -128,9 +125,7 @@ public class AdminDashboardUI extends JFrame {
                 BorderFactory.createEmptyBorder(10, 15, 10, 15)
         ));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.addActionListener(e -> {
-            action.run();
-        });
+        btn.addActionListener(e -> action.run());
         return btn;
     }
 
@@ -149,10 +144,11 @@ public class AdminDashboardUI extends JFrame {
 
         if (result == JOptionPane.OK_OPTION) {
             try {
-                Chat newChat = new Chat();
-                newChat.setChatName(nameField.getText());
-                newChat.setDescription(descArea.getText());
-                chatService.createChat(newChat);
+                ChatGroup newChatGroup = new ChatGroup();
+                newChatGroup.setChatName(nameField.getText());
+                newChatGroup.setDescription(descArea.getText());
+                newChatGroup.setAdmin(currentAdminUser);
+                chatService.createChat(newChatGroup);
                 JOptionPane.showMessageDialog(this, "Chat created successfully!");
                 loadData();
             } catch (RemoteException e) {
@@ -161,47 +157,50 @@ public class AdminDashboardUI extends JFrame {
         }
     }
 
-//    private void manageSubscription(boolean subscribe) {
-//        try {
-//            List<User> users = userService.getAllUsers();
-//            List<Chat> chats = chatService.getAllChats();
-//
-//            if (users.isEmpty() || chats.isEmpty()) {
-//                showError("No users or chats available");
-//                return;
-//            }
-//
-//            JComboBox<User> userCombo = new JComboBox<>(users.toArray(new User[0]));
-//            JComboBox<Chat> chatCombo = new JComboBox<>(chats.toArray(new Chat[0]));
-//
-//            JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
-//            panel.add(new JLabel("Select User:"));
-//            panel.add(userCombo);
-//            panel.add(new JLabel("Select Chat:"));
-//            panel.add(chatCombo);
-//
-//            int result = JOptionPane.showConfirmDialog(
-//                    this, panel,
-//                    subscribe ? "Subscribe User" : "Unsubscribe User",
-//                    JOptionPane.OK_CANCEL_OPTION);
-//
-//            if (result == JOptionPane.OK_OPTION) {
-//                User user = (User) userCombo.getSelectedItem();
-//                Chat chat = (Chat) chatCombo.getSelectedItem();
-//
-//                if (subscribe) {
-//                    chatService.subscribeUserToChat(user.getUser_id(), chat.getChatId());
-//                } else {
-//                    chatService.unsubscribeUserFromChat(user.getUser_id(), chat.getChatId());
-//                }
-//
-//                JOptionPane.showMessageDialog(this, "Operation completed successfully!");
-//                loadData();
-//            }
-//        } catch (RemoteException e) {
-//            showError("Operation failed: " + e.getMessage());
-//        }
-//    }
+    private void createChatUser() {
+        try {
+            // Fetch users and chat groups
+            List<User> users = chatService.getAllUsers();
+            List<ChatGroup> chatGroups = chatService.getAllChats();
+
+            // Prepare combo boxes
+            JComboBox<User> userComboBox = new JComboBox<>(users.toArray(new User[0]));
+            JComboBox<ChatGroup> groupComboBox = new JComboBox<>(chatGroups.toArray(new ChatGroup[0]));
+
+            // Render names instead of object toString
+            userComboBox.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
+                return new JLabel(value != null ? value.getUsername() + " (ID: " + value.getUser_id() + ")" : "");
+            });
+
+            groupComboBox.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
+                return new JLabel(value != null ? value.getChatName() + " (ID: " + value.getChatId() + ")" : "");
+            });
+
+            JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+            panel.add(new JLabel("Select User:"));
+            panel.add(userComboBox);
+            panel.add(new JLabel("Select Chat Group:"));
+            panel.add(groupComboBox);
+
+            int result = JOptionPane.showConfirmDialog(this, panel, "Assign User to Group", JOptionPane.OK_CANCEL_OPTION);
+
+            if (result == JOptionPane.OK_OPTION) {
+                User selectedUser = (User) userComboBox.getSelectedItem();
+                ChatGroup selectedGroup = (ChatGroup) groupComboBox.getSelectedItem();
+
+                if (selectedUser != null && selectedGroup != null) {
+                    chatService.addUserToGroup(selectedUser.getUser_id(), selectedGroup.getChatId());
+                    JOptionPane.showMessageDialog(this, "User added to group successfully!");
+                    loadData();
+                } else {
+                    showError("You must select both user and group.");
+                }
+            }
+        } catch (RemoteException e) {
+            showError("Failed to load data: " + e.getMessage());
+        }
+    }
+
 
     private void removeUser() {
         try {
@@ -211,9 +210,7 @@ public class AdminDashboardUI extends JFrame {
                 return;
             }
 
-            // Retrieve as Integer first, then convert to Long
-            Integer userIdInt = (Integer) userTable.getValueAt(selectedRow, 0);
-            int userId = (int) userIdInt.longValue();  // Convert to Long
+            int userId = (Integer) userTable.getValueAt(selectedRow, 0);
 
             int confirm = JOptionPane.showConfirmDialog(
                     this,
@@ -237,35 +234,33 @@ public class AdminDashboardUI extends JFrame {
         try {
             // Load users
             List<User> users = userService.getAllUsers();
-            String[] userColumns = {"User ID", "Email", "Nickname", "Password", "Profile Picture", "Role", "Username"};
+            String[] userColumns = {"User ID", "Email", "Nickname", "Role", "Username"};
             DefaultTableModel userModel = new DefaultTableModel(userColumns, 0);
             for (User user : users) {
                 userModel.addRow(new Object[]{
                         user.getUser_id(),
                         user.getEmail(),
                         user.getNickname(),
-                        user.getPassword(),
-                        user.getProfile_picture(),
                         user.getRole(),
                         user.getUsername()
                 });
             }
             userTable.setModel(userModel);
 
-            // Load chats only if chatTable is initialized
-            if (chatTable != null) {  // Add null check for safety
-                List<Chat> chats = chatService.getAllChats();
-                String[] chatColumns = {"Chat ID", "Chat Name", "Description"};
-                DefaultTableModel chatModel = new DefaultTableModel(chatColumns, 0);
-                for (Chat chat : chats) {
-                    chatModel.addRow(new Object[]{
-                            chat.getChatId(),
-                            chat.getChatName(),
-                            chat.getDescription()
-                    });
-                }
-                chatTable.setModel(chatModel);
+            // Load chats
+            List<ChatGroup> chatGroups = chatService.getAllChats();
+            String[] chatColumns = {"Chat ID", "Chat Name", "Description", "Admin"};
+            DefaultTableModel chatModel = new DefaultTableModel(chatColumns, 0);
+            for (ChatGroup chatGroup : chatGroups) {
+                chatModel.addRow(new Object[]{
+                        chatGroup.getChatId(),
+                        chatGroup.getChatName(),
+                        chatGroup.getDescription(),
+                        chatGroup.getAdmin() != null ? chatGroup.getAdmin().getUsername() : "N/A"
+                });
             }
+            chatTable.setModel(chatModel);
+            chatTable.repaint();
 
         } catch (RemoteException e) {
             showError("Failed to load data: " + e.getMessage());
@@ -282,9 +277,17 @@ public class AdminDashboardUI extends JFrame {
                 Registry registry = LocateRegistry.getRegistry("localhost", 55545);
                 UserService userService = (UserService) registry.lookup("UserService");
                 ChatService chatService = (ChatService) registry.lookup("ChatService");
-                new AdminDashboardUI("admin", userService, chatService);
+
+                // Get admin user properly
+                User adminUser = userService.getUserByUsername("admin");
+                if (adminUser == null) {
+                    JOptionPane.showMessageDialog(null, "Admin user not found!");
+                    return;
+                }
+                new AdminDashboardUI(adminUser, userService, chatService);
             } catch (Exception e) {
                 e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
             }
         });
     }

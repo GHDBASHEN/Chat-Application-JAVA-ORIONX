@@ -16,6 +16,29 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
         this.sessionFactory = sessionFactory;
     }
 
+
+    @Override
+    public void updateUser(User user) throws RemoteException {
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            session.saveOrUpdate(user);
+            session.getTransaction().commit();
+        } catch (Exception e) {
+            throw new RemoteException("Error updating user", e);
+        }
+    }
+
+    @Override
+    public User getUserByUsername(String username) throws RemoteException {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("FROM User WHERE username = :username", User.class)
+                    .setParameter("username", username)
+                    .uniqueResult();
+        } catch (Exception e) {
+            throw new RemoteException("Error finding user", e);
+        }
+    }
+
     @Override
     public List<User> getAllUsers() throws RemoteException {
         try (Session session = sessionFactory.openSession()) {
@@ -59,20 +82,4 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
             throw new RemoteException("Authentication error", e);
         }
     }
-
-    @Override
-    public boolean registerUser(User newUser) {
-        try {
-            Session session = sessionFactory.openSession();
-            session.beginTransaction();
-            session.save(newUser);
-            session.getTransaction().commit();
-            return true;    // User registered successfully
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-
 }

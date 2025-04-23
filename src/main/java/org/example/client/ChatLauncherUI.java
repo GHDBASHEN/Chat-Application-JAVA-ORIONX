@@ -165,12 +165,13 @@ public class ChatLauncherUI extends JFrame {
             User user = userService.checkEmailAndPassword(email, password);
             if (user != null) {
                 if (user.getRole().equalsIgnoreCase("admin")) {
-                    new AdminDashboardUI(user.getUsername(), userService, chatService);
+                    User adminUser = userService.getUserByUsername(user.getUsername());
+                    new AdminDashboardUI(adminUser, userService, chatService);
                 }
                  else {
                     new userDashBoard(chatService, userService, logService, chatLog).handle(user);
                 }
-                                // Close login window
+                dispose(); // Close login window
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid credentials!", "Error", JOptionPane.ERROR_MESSAGE);
             }
