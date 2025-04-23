@@ -26,10 +26,12 @@ public class userDashBoard {
     private JTextField msgFeild;
     private JButton sendButton;
     private JLabel userName;
+    private JScrollPane groupList;
     private ChatService chatService;
     private UserService userService;
     private ChatLogService logService;
     private ChatLog chatLog;
+    private JPanel groupButtonPanel; // panel inside groupList
 
     public userDashBoard(ChatService chatService, UserService userService, ChatLogService logService, ChatLog chatLog) {
         this.chatService = chatService;
@@ -37,6 +39,20 @@ public class userDashBoard {
         this.logService = logService;
         this.chatLog = chatLog;
 
+        // display all groups START
+        this.groupButtonPanel = new JPanel();
+        groupButtonPanel.setLayout(new BoxLayout(groupButtonPanel, BoxLayout.Y_AXIS));
+        groupList.setViewportView(groupButtonPanel);
+
+        // Example buttons
+        for (int i = 1; i <= 5; i++) {
+            JButton groupButton = new JButton("Group " + i);
+            groupButtonPanel.add(groupButton);
+        }
+
+        groupButtonPanel.revalidate();
+        groupButtonPanel.repaint();
+        // display all groups END
     }
 
     public void handle(User user) throws Exception {
@@ -48,6 +64,7 @@ public class userDashBoard {
             }
         };
 
+        // add observer to the list [add new user]
         ChatObserver stub = (ChatObserver) UnicastRemoteObject.exportObject(observer, 0);
         chatLog = logService.login(user.getUser_id());
         chatService.subscribe(user, stub, chatLog);
@@ -115,4 +132,5 @@ public class userDashBoard {
         });
 
     }
+
 }
