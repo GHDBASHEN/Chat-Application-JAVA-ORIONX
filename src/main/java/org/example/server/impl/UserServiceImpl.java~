@@ -18,13 +18,7 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
 
     @Override
     public User getUserByUsername(String username) throws RemoteException {
-        try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("FROM User WHERE username = :username", User.class)
-                    .setParameter("username", username)
-                    .uniqueResult();
-        } catch (Exception e) {
-            throw new RemoteException("Error finding user", e);
-        }
+        return null;
     }
 
     @Override

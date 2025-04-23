@@ -213,7 +213,6 @@ public class AdminDashboardUI extends JFrame {
                 });
             }
             chatTable.setModel(chatModel);
-            chatTable.repaint();
 
         } catch (RemoteException e) {
             showError("Failed to load data: " + e.getMessage());
