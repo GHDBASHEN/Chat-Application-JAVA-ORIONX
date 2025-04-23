@@ -42,6 +42,7 @@ public class userDashBoard {
     private JTextField emailField;
     private JTextField usernameField;
     private JPasswordField passwordField;
+    private JPasswordField confirmPasswordField;
     private JTextField nicknameField;
     private JTextField profilePictureField;
     private JButton saveProfileButton;
@@ -52,6 +53,7 @@ public class userDashBoard {
         emailField = new JTextField(20);
         usernameField = new JTextField(20);
         passwordField = new JPasswordField(20);
+        confirmPasswordField = new JPasswordField(20);
         nicknameField = new JTextField(20);
         profilePictureField = new JTextField(20);
         profilePictureField.setEditable(false); // Make it read-only
@@ -124,13 +126,70 @@ public class userDashBoard {
 
         gbc.gridx = 0;
         gbc.gridy = 3;
+        updatePane.add(new JLabel("Confirm Password:"), gbc);
+        // Set the echo character for confirmPasswordField to match passwordField
+        confirmPasswordField.setEchoChar('•'); // Standard bullet character
+
+
+        // Create a layered pane for the confirm password field with eye icon inside
+        JLayeredPane layeredPane = new JLayeredPane();
+
+        // Get the preferred size of the passwordField to match sizes
+        Dimension passwordSize = passwordField.getPreferredSize();
+        int fieldWidth = passwordSize.width;
+        int fieldHeight = passwordSize.height;
+        layeredPane.setPreferredSize(passwordSize);
+
+        // Add the password field to the layered pane with matching size
+        confirmPasswordField.setBounds(0, 0, fieldWidth, fieldHeight);
+        layeredPane.add(confirmPasswordField, JLayeredPane.DEFAULT_LAYER);
+
+        // Create eye icon button for password visibility with standard icon
+        JButton viewPasswordButton = new JButton("-"); // Closed eye icon (password hidden)
+        viewPasswordButton.setFont(new Font("Arial", Font.BOLD, 14));
+        viewPasswordButton.setFocusPainted(false);
+        viewPasswordButton.setBorderPainted(false);
+        viewPasswordButton.setContentAreaFilled(false);
+        viewPasswordButton.setToolTipText("Show/Hide Password");
+
+        // Position the button inside the password field at the right corner
+        int buttonWidth = 20;
+        int buttonHeight = 20;
+        int rightPadding = 5;
+        viewPasswordButton.setBounds(fieldWidth - buttonWidth - rightPadding, 
+                                    (fieldHeight - buttonHeight) / 2, 
+                                    buttonWidth, buttonHeight);
+
+        viewPasswordButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Toggle password visibility
+                if (confirmPasswordField.getEchoChar() == 0) {
+                    // Currently showing, switch to hiding
+                    confirmPasswordField.setEchoChar('•'); // Standard bullet character
+                    viewPasswordButton.setText("-"); // Closed eye icon (password hidden)
+                } else {
+                    // Currently hiding, switch to showing
+                    confirmPasswordField.setEchoChar((char) 0);
+                    viewPasswordButton.setText("O"); // Open eye (representing "visible")
+                }
+            }
+        });
+
+        layeredPane.add(viewPasswordButton, JLayeredPane.PALETTE_LAYER);
+
+        gbc.gridx = 1;
+        updatePane.add(layeredPane, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
         updatePane.add(new JLabel("Nickname:"), gbc);
 
         gbc.gridx = 1;
         updatePane.add(nicknameField, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         updatePane.add(new JLabel("Profile Picture:"), gbc);
 
         // Create a panel for the profile picture field and choose file button
@@ -142,7 +201,7 @@ public class userDashBoard {
         updatePane.add(profilePicturePanel, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 6;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         updatePane.add(saveProfileButton, gbc);
@@ -152,10 +211,23 @@ public class userDashBoard {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
+                    // Get password values
+                    String password = new String(passwordField.getPassword());
+                    String confirmPassword = new String(confirmPasswordField.getPassword());
+
+                    // Check if passwords match
+                    if (!password.equals(confirmPassword)) {
+                        JOptionPane.showMessageDialog(main, 
+                            "Passwords do not match!", 
+                            "Error", 
+                            JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
                     // Update user object with new values
                     currentUser.setEmail(emailField.getText());
                     currentUser.setUsername(usernameField.getText());
-                    currentUser.setPassword(new String(passwordField.getPassword()));
+                    currentUser.setPassword(password);
                     currentUser.setNickname(nicknameField.getText());
 
                     // Handle profile picture
