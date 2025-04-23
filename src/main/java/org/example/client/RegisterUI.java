@@ -6,6 +6,7 @@ import org.example.rmi.UserService;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.regex.Pattern;
 
 public class RegisterUI extends JFrame {
 
@@ -23,74 +24,84 @@ public class RegisterUI extends JFrame {
     }
 
     private void initUI() {
-        setTitle("User Registration");
+        setTitle("Register New User");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(400, 350);
+        setSize(450, 430);
         setLocationRelativeTo(null);
+        setResizable(false);
 
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        mainPanel.setBackground(new Color(245, 245, 245));
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.insets = new Insets(10, 10, 10, 10);
+
+        Font labelFont = new Font("Segoe UI", Font.BOLD, 14);
+        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 14);
 
         // Username
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        panel.add(new JLabel("Username:"), gbc);
-
-        gbc.gridx = 1;
-        usernameField = new JTextField(15);
-        panel.add(usernameField, gbc);
-
+        addLabeledField("Username:", usernameField = new JTextField(18), labelFont, fieldFont, gbc, mainPanel, 0);
         // Nickname
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        panel.add(new JLabel("Nickname:"), gbc);
-
-        gbc.gridx = 1;
-        nicknameField = new JTextField(15);
-        panel.add(nicknameField, gbc);
-
+        addLabeledField("Nickname:", nicknameField = new JTextField(18), labelFont, fieldFont, gbc, mainPanel, 1);
         // Email
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        panel.add(new JLabel("Email:"), gbc);
-
-        gbc.gridx = 1;
-        emailField = new JTextField(15);
-        panel.add(emailField, gbc);
-
+        addLabeledField("Email:", emailField = new JTextField(18), labelFont, fieldFont, gbc, mainPanel, 2);
         // Password
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        panel.add(new JLabel("Password:"), gbc);
-
-        gbc.gridx = 1;
-        passwordField = new JPasswordField(15);
-        panel.add(passwordField, gbc);
-
+        addLabeledField("Password:", passwordField = new JPasswordField(18), labelFont, fieldFont, gbc, mainPanel, 3);
         // Role
         gbc.gridx = 0;
         gbc.gridy = 4;
-        panel.add(new JLabel("Role:"), gbc);
+        JLabel roleLabel = new JLabel("Role:");
+        roleLabel.setFont(labelFont);
+        mainPanel.add(roleLabel, gbc);
 
         gbc.gridx = 1;
-        roleBox = new JComboBox<>(new String[]{"user", "admin"});
-        panel.add(roleBox, gbc);
+        roleBox = new JComboBox<>(new String[]{"USER", "ADMIN"});
+        roleBox.setFont(fieldFont);
+        mainPanel.add(roleBox, gbc);
 
         // Register Button
         gbc.gridx = 0;
         gbc.gridy = 5;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
-        registerButton = new JButton("Register");
-        panel.add(registerButton, gbc);
 
+        registerButton = new JButton("Register");
+        registerButton.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        registerButton.setBackground(new Color(0, 123, 255));
+        registerButton.setForeground(Color.WHITE);
+        registerButton.setFocusPainted(false);
+        registerButton.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
         registerButton.addActionListener(this::handleRegister);
 
-        add(panel);
+        // Hover effect
+        registerButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                registerButton.setBackground(new Color(0, 100, 210));
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                registerButton.setBackground(new Color(0, 123, 255));
+            }
+        });
+
+        mainPanel.add(registerButton, gbc);
+        add(mainPanel);
         setVisible(true);
+    }
+
+    private void addLabeledField(String labelText, JTextField field, Font labelFont, Font fieldFont,
+                                 GridBagConstraints gbc, JPanel panel, int row) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        JLabel label = new JLabel(labelText);
+        label.setFont(labelFont);
+        panel.add(label, gbc);
+
+        gbc.gridx = 1;
+        field.setFont(fieldFont);
+        panel.add(field, gbc);
     }
 
     private void handleRegister(ActionEvent e) {
@@ -101,7 +112,17 @@ public class RegisterUI extends JFrame {
         String role = (String) roleBox.getSelectedItem();
 
         if (username.isEmpty() || nickname.isEmpty() || email.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "All fields are required.");
+            JOptionPane.showMessageDialog(this, "All fields are required.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid email address.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (password.length() < 6) {
+            JOptionPane.showMessageDialog(this, "Password must be at least 6 characters.", "Validation Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -119,11 +140,16 @@ public class RegisterUI extends JFrame {
                 JOptionPane.showMessageDialog(this, "Registration successful!");
                 dispose();
             } else {
-                JOptionPane.showMessageDialog(this, "User already exists or registration failed.");
+                JOptionPane.showMessageDialog(this, "User already exists or registration failed.", "Registration Failed", JOptionPane.WARNING_MESSAGE);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error during registration: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error during registration: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        return Pattern.matches(emailRegex, email);
     }
 }

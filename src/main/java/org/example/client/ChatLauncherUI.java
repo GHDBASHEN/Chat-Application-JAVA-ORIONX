@@ -78,7 +78,13 @@ public class ChatLauncherUI extends JFrame {
 
         //fro register
         registerButton = new JButton("Register");
-        styleButton(registerButton, new Color(0, 150, 136));
+        registerButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        registerButton.setBackground(new Color(183, 59, 198));
+        registerButton.setForeground(Color.WHITE);
+        registerButton.setFocusPainted(false);
+        registerButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+
 
         registerButton.addActionListener(e -> {
             new RegisterUI(userService);
