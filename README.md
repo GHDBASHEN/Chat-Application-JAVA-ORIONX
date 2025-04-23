@@ -10,17 +10,17 @@ User can:
   Register (Email, Username, Password, Nick Name, Profile Picture)
 
 Update profile details:
-  Subscribe/Unsubscribe from chats
+  Subscribe/Unsubscribe from chatGroups
 
 Admin can:
 
-  Create chats
+  Create chatGroups
   Subscribe/Unsubscribe users
   Remove users
   
 Chat Functionality:
 
-  Notify subscribed online users when chat starts
+  Notify subscribed online users when chatGroup starts
   Display join/leave messages with time
-  Save chat history to .txt and log in DB
-  Auto-stop chat when last user leaves
+  Save chatGroup history to .txt and log in DB
+  Auto-stop chatGroup when last user leaves
