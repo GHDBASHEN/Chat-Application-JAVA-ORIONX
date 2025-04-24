@@ -15,6 +15,7 @@ import org.example.domain.User;
 import org.example.rmi.*;
 import org.example.server.impl.ChatLogServiceImpl;
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 
 public class ChatLauncherUI extends JFrame {
 
@@ -167,7 +168,7 @@ public class ChatLauncherUI extends JFrame {
             if (user != null) {
                 if (user.getRole().equalsIgnoreCase("admin")) {
                     User adminUser = userService.getUserByUsername(user.getUsername());
-                    new AdminDashboardUI(adminUser, userService, chatService);
+                    new AdminDashboardUI(adminUser, userService, chatService, logService);
                 }
                  else {
                     new userDashBoard(chatService, userService, logService, chatLog, user).handle();
@@ -195,7 +196,7 @@ public class ChatLauncherUI extends JFrame {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
-                SessionFactory sessionFactory = null;
+                SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
                 List<ChatLog> chatLogs = new ChatLogServiceImpl(sessionFactory).getChatLogsWithNullEndTime();
                 if (!chatLogs.isEmpty()) {
                     for (ChatLog chatLog : chatLogs) {

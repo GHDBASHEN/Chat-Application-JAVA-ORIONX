@@ -19,6 +19,7 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
     private final SessionFactory sessionFactory;
     public ChatServiceImpl(SessionFactory sessionFactory) throws RemoteException {
         this.sessionFactory = sessionFactory;
+        this.observers = new ArrayList<>();
     }
 
     @PersistenceContext
@@ -55,8 +56,34 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
     }
 
     @Override
-    public void unsubscribeFromChat(int userId, int chatId) throws RemoteException {
+    public void unsubscribeFromChat(User user, ChatObserver observer, ChatLog chatLog, int chatId) throws RemoteException {
+        try {
+            // Add null checks
+            if (observer == null) {
+                System.err.println("Attempted to unsubscribe null observer");
+                return;
+            }
 
+            if (observers == null) {
+                System.err.println("Observers list not initialized");
+                return;
+            }
+
+            // Remove observer safely
+            if (observers.remove(observer)) {
+                System.out.println("Unsubscribed user " + user.getUsername() + " from chat " + chatId);
+
+                // Additional cleanup logic
+                if (chatLog != null) {
+                    chatLog.setEnd_time(LocalDateTime.now());
+                    // Persist chat log changes if needed
+                }
+            } else {
+                System.err.println("Observer not found in subscribers list");
+            }
+        } catch (Exception e) {
+            throw new RemoteException("Unsubscribe failed", e);
+        }
     }
 
     @Override
@@ -64,10 +91,6 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
         return List.of();
     }
 
-    @Override
-    public void sendMessage(Message message) throws RemoteException {
-
-    }
 
     @Override
     public List<ChatMessage> getAllChatMessages(int chatId) throws RemoteException {
@@ -199,6 +222,51 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
         }
     }
 
+    @Override
+    public void sendAdminMessage(String message, User adminUser, int groupId) throws RemoteException {
+        Transaction tx = null;
+        try (Session session = sessionFactory.openSession()) {
+            tx = session.beginTransaction();
+
+            // Verify admin user exists
+            User managedAdmin = session.get(User.class, adminUser.getUser_id());
+            if (managedAdmin == null) {
+                throw new RemoteException("Admin user not found");
+            }
+
+            // Load chat group with admin relationship
+            ChatGroup chatGroup = session.createQuery(
+                    "FROM ChatGroup g LEFT JOIN FETCH g.admin WHERE g.chatId = :groupId",
+                    ChatGroup.class
+            ).setParameter("groupId", groupId).uniqueResult();
+
+            if (chatGroup == null) {
+                throw new RemoteException("Chat group not found");
+            }
+
+            // Validate admin privileges
+//            if (!chatGroup.getAdmin().getUser_id().equals(managedAdmin.getUser_id())) {
+//                throw new RemoteException("User lacks admin privileges");
+//            }
+
+            // Create and persist message
+            ChatMessage chatMessage = new ChatMessage();
+            chatMessage.setUser(managedAdmin);
+            chatMessage.setChatGroup(chatGroup);
+            chatMessage.setMessage(message);
+            chatMessage.setStart_at(LocalDateTime.now());
+
+            session.persist(chatMessage);
+            tx.commit();
+
+            // Notify observers
+            notifyAllObservers(message, groupId);
+
+        } catch (Exception e) {
+            if (tx != null && tx.isActive()) tx.rollback();
+            throw new RemoteException("Failed to send admin message: " + e.getMessage(), e);
+        }
+    }
 
     private void notifyAllObservers(String message, int chatId) {
         observers.forEach(obs -> {
@@ -207,4 +275,7 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
         });
 
     }
+
+
+
 }
