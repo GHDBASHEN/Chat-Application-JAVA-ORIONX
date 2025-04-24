@@ -153,7 +153,7 @@ public class RegisterUI extends JFrame {
             User registered = userService.registerUser(newUser);
             if (registered != null && registered.getUser_id() > 0) {
                 chatService.addUserToGroup(registered.getUser_id(), 1);
-                JOptionPane.showMessageDialog(this, "Registration successful! Your ID is " + registered.getUser_id());
+                JOptionPane.showMessageDialog(this, "Registration successful! Your ID is " + registered.getUserId());
                 dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Registration failed.", "Error", JOptionPane.ERROR_MESSAGE);

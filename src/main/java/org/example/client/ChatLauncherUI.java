@@ -87,7 +87,7 @@ public class ChatLauncherUI extends JFrame {
 
 
         registerButton.addActionListener(e -> {
-            new RegisterUI(userService);
+            new RegisterUI(userService, chatService);
         });
 
 
@@ -169,9 +169,10 @@ public class ChatLauncherUI extends JFrame {
                     new AdminDashboardUI(adminUser, userService, chatService);
                 }
                  else {
-                    new userDashBoard(chatService, userService, logService, chatLog).handle(user);
+                    new userDashBoard(chatService, userService, logService, chatLog, user).handle();
                 }
-                dispose(); // Close login window
+                dispose();
+
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid credentials!", "Error", JOptionPane.ERROR_MESSAGE);
             }
