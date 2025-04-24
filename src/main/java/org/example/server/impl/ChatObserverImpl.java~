@@ -13,7 +13,7 @@ public class ChatObserverImpl extends UnicastRemoteObject implements ChatObserve
     }
 
     @Override
-    public void notifyNewMessage(String message, int chatId) throws RemoteException {
+    public void notifyNewMessage(String message) throws RemoteException {
         SwingUtilities.invokeLater(() -> chatArea.append(message + "\n"));
     }
 }

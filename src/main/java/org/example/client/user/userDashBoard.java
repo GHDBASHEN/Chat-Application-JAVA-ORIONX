@@ -1,12 +1,18 @@
 package org.example.client.user;
 
-import org.example.domain.ChatLog;
-import org.example.domain.User;
+import org.example.domain.*;
 import org.example.rmi.ChatLogService;
 import org.example.rmi.ChatObserver;
 import org.example.rmi.ChatService;
 import org.example.rmi.UserService;
 
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
+import java.awt.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -32,11 +38,9 @@ public class userDashBoard {
     private JTextField msgFeild;
     private JButton sendButton;
     private JLabel userName;
+    private JScrollPane groupList;
+    private JPanel groupButtonPanel; // panel inside groupList
     private JLabel profilePicLabel; // Added for profile picture
-    private ChatService chatService;
-    private UserService userService;
-    private ChatLogService logService;
-    private ChatLog chatLog;
 
     // Profile update components
     private JTextField emailField;
@@ -46,7 +50,36 @@ public class userDashBoard {
     private JTextField nicknameField;
     private JTextField profilePictureField;
     private JButton saveProfileButton;
+
+    private ChatService chatService;
+    private UserService userService;
+    private ChatLogService logService;
+    private ChatLog chatLog;
+    private User user;
+    private ChatGroup chatGroup;
     private User currentUser;
+
+    public userDashBoard(ChatService chatService, UserService userService, ChatLogService logService, ChatLog chatLog, User user) {
+        this.chatService = chatService;
+        this.userService = userService;
+        this.logService = logService;
+        this.chatLog = chatLog;
+        this.user = user;
+        this.currentUser = user;
+
+        loadUserGroups(user); // display all groups
+
+        // auto-select first chat group if available
+        try {
+            List<ChatGroup> groups = userService.getGroupDataByUserId(user.getUser_id());
+            if (!groups.isEmpty()) {
+
+                chatGroup = groups.get(0);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void initializeProfileUpdateUI() {
         // Create components
@@ -79,9 +112,9 @@ public class userDashBoard {
                     public boolean accept(java.io.File f) {
                         if (f.isDirectory()) return true;
                         String name = f.getName().toLowerCase();
-                        return name.endsWith(".jpg") || name.endsWith(".jpeg") || 
-                               name.endsWith(".png") || name.endsWith(".gif") || 
-                               name.endsWith(".bmp");
+                        return name.endsWith(".jpg") || name.endsWith(".jpeg") ||
+                                name.endsWith(".png") || name.endsWith(".gif") ||
+                                name.endsWith(".bmp");
                     }
                     public String getDescription() {
                         return "Image files (*.jpg, *.jpeg, *.png, *.gif, *.bmp)";
@@ -156,9 +189,9 @@ public class userDashBoard {
         int buttonWidth = 20;
         int buttonHeight = 20;
         int rightPadding = 5;
-        viewPasswordButton.setBounds(fieldWidth - buttonWidth - rightPadding, 
-                                    (fieldHeight - buttonHeight) / 2, 
-                                    buttonWidth, buttonHeight);
+        viewPasswordButton.setBounds(fieldWidth - buttonWidth - rightPadding,
+                (fieldHeight - buttonHeight) / 2,
+                buttonWidth, buttonHeight);
 
         viewPasswordButton.addActionListener(new ActionListener() {
             @Override
@@ -217,10 +250,10 @@ public class userDashBoard {
 
                     // Check if passwords match
                     if (!password.equals(confirmPassword)) {
-                        JOptionPane.showMessageDialog(main, 
-                            "Passwords do not match!", 
-                            "Error", 
-                            JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(main,
+                                "Passwords do not match!",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
                         return;
                     }
 
@@ -232,6 +265,7 @@ public class userDashBoard {
 
                     // Handle profile picture
                     String selectedFilePath = profilePictureField.getText();
+                    System.out.println("sssssssssss"+selectedFilePath);
                     if (selectedFilePath != null && !selectedFilePath.isEmpty()) {
                         try {
                             // Create directory for profile pictures if it doesn't exist
@@ -247,9 +281,9 @@ public class userDashBoard {
 
                             // Copy the file
                             java.nio.file.Files.copy(
-                                sourceFile.toPath(),
-                                destFile.toPath(),
-                                java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                                    sourceFile.toPath(),
+                                    destFile.toPath(),
+                                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
                             );
 
                             // Update the path in the user object to the copied file
@@ -276,28 +310,20 @@ public class userDashBoard {
                     updateProfilePicture();
 
                     // Show success message
-                    JOptionPane.showMessageDialog(main, 
-                        "Profile updated successfully!", 
-                        "Success", 
-                        JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(main,
+                            "Profile updated successfully!",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
 
                 } catch (RemoteException ex) {
-                    JOptionPane.showMessageDialog(main, 
-                        "Error updating profile: " + ex.getMessage(), 
-                        "Error", 
-                        JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(main,
+                            "Error updating profile: " + ex.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
                     ex.printStackTrace();
                 }
             }
         });
-    }
-
-    public userDashBoard(ChatService chatService, UserService userService, ChatLogService logService, ChatLog chatLog) {
-        this.chatService = chatService;
-        this.userService = userService;
-        this.logService = logService;
-        this.chatLog = chatLog;
-
     }
 
     // Method to create a circular profile picture
@@ -391,8 +417,8 @@ public class userDashBoard {
         }
     }
 
-    public void handle(User user) throws Exception {
-        this.currentUser = user;
+    public void handle() throws Exception {
+        userName.setText("Hello, "+user.getUsername() + "\uD83D\uDE09");
 
         JFrame frame = new JFrame("User Dashboard");
         frame.setContentPane(main);
@@ -427,14 +453,26 @@ public class userDashBoard {
         initializeProfileUpdateUI();
 
         ChatObserver observer = new ChatObserver() {
-            public void notifyNewMessage(String message) throws RemoteException {
-                SwingUtilities.invokeLater(() -> textArea1.append(message + "\n"));
+            public void notifyNewMessage(String message, int chatId) throws RemoteException {
+                System.out.println("Int: "+chatId+"  Object: "+chatGroup.getChatId());
+                if(chatId == chatGroup.getChatId()){
+
+                    List<ChatMessage> messages = chatService.getAllChatMessages(chatGroup.getChatId());
+                    for(ChatMessage msg : messages){
+                        SwingUtilities.invokeLater(() -> {
+                            if (!textArea1.getText().contains(msg.getMessage())) {
+                                textArea1.append(msg.getMessage() + "\n");
+                            }
+                        });
+                    }
+                }
             }
         };
 
+        // add observer to the list [add new user]
         ChatObserver stub = (ChatObserver) UnicastRemoteObject.exportObject(observer, 0);
         chatLog = logService.login(user.getUser_id());
-        chatService.subscribe(user, stub, chatLog);
+        chatService.subscribe(user, stub, chatLog, chatGroup.getChatId());
 
         // Make the frame visible after all setup is done
         frame.setVisible(true);
@@ -461,14 +499,14 @@ public class userDashBoard {
                     String msg = msgFeild.getText().trim();
                     if (!msg.isEmpty()) {
                         if (logService.isUserOnline(user.getUser_id())) {
-                            chatService.sendMessage(msg, user);
+                            chatService.sendMessage(msg, user, chatGroup.getChatId());
                         } else {
                             System.out.println("User session has ended. Cannot send message.");
                         }
 
                         if (msg.equalsIgnoreCase("Bye")) {
                             chatLog = logService.logout(user.getUser_id());
-                            chatService.unsubscribe(user, stub, chatLog);
+                            chatService.unsubscribe(user, stub, chatLog, chatGroup.getChatId());
                         }
 
                         msgFeild.setText("");
@@ -485,7 +523,7 @@ public class userDashBoard {
                 try {
                     chatLog = logService.logout(user.getUser_id());
                     if (chatLog != null) {
-                        chatService.unsubscribe(user, stub, chatLog);
+                        chatService.unsubscribe(user, stub, chatLog, chatGroup.getChatId());
                         System.out.println("User logged out and unsubscribed.");
                     }
                 } catch (RemoteException e) {
@@ -495,4 +533,45 @@ public class userDashBoard {
         });
 
     }
+
+    private void loadUserGroups(User user) {
+        try {
+            groupButtonPanel = new JPanel();
+            groupButtonPanel.setLayout(new BoxLayout(groupButtonPanel, BoxLayout.Y_AXIS));
+            groupList.setViewportView(groupButtonPanel);
+            //List<String> groupNames = userService.getGroupDataByUserId(user.getUser_id());
+            List<ChatGroup> groups = userService.getGroupDataByUserId(user.getUser_id());
+
+            groupButtonPanel.removeAll(); // Clear existing buttons
+            for (ChatGroup group : groups) {
+                JButton groupBtn = new JButton(group.getChatName());
+                groupBtn.addActionListener(e -> {
+                    chatGroup = group;
+
+                    // Clear previous messages
+                    textArea1.setText("");
+
+                    try {
+                        List<ChatMessage> messages = chatService.getAllChatMessages(chatGroup.getChatId());
+                        for (ChatMessage msg : messages) {
+                            textArea1.append(msg.getMessage() + "\n");
+                        }
+                    } catch (RemoteException ex) {
+                        ex.printStackTrace();
+                    }
+
+                    tabbedPane1.setSelectedComponent(chatPane);
+                });
+
+                groupButtonPanel.add(groupBtn);
+            }
+            groupButtonPanel.revalidate();
+            groupButtonPanel.repaint();
+
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }
