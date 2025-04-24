@@ -1,8 +1,10 @@
 package org.example.client.admin;
 
 import org.example.domain.ChatGroup;
+import org.example.domain.ChatLog;
 import org.example.domain.ChatMessage;
 import org.example.domain.User;
+import org.example.rmi.ChatObserver;
 import org.example.rmi.ChatService;
 import org.example.rmi.UserService;
 
@@ -20,7 +22,9 @@ import java.awt.event.ActionEvent;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
@@ -42,6 +46,8 @@ public class AdminDashboardUI extends JFrame {
     private JScrollPane adminGroupScroll;
     private JPanel adminGroupButtonPanel;
     private ChatGroup selectedAdminGroup;
+    private ChatObserver adminObserver;
+    private ChatObserver adminObserverStub;
 
     private JTable userTable;
     private JTable chatTable;
@@ -52,6 +58,19 @@ public class AdminDashboardUI extends JFrame {
         this.chatService = chatService;
         initializeUI();
         loadData();
+
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                try {
+                    if (selectedAdminGroup != null) {
+                        chatService.unsubscribe(currentAdminUser, adminObserverStub, null, selectedAdminGroup.getChatId());
+                    }
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     private void initializeUI() {
@@ -192,6 +211,9 @@ public class AdminDashboardUI extends JFrame {
         adminMsgField = new JTextField();
         adminSendButton = createIconButton("📤 Send", "Send message", this::sendAdminGroupMessage);
 
+        // Enable Enter key for sending
+        adminMsgField.addActionListener(e -> sendAdminGroupMessage());
+
         inputPanel.add(adminMsgField, BorderLayout.CENTER);
         inputPanel.add(adminSendButton, BorderLayout.EAST);
 
@@ -200,9 +222,95 @@ public class AdminDashboardUI extends JFrame {
         groupChatPanel.add(chatScroll, BorderLayout.CENTER);
         groupChatPanel.add(inputPanel, BorderLayout.SOUTH);
 
+        // Initialize chat observer
+        initializeAdminObserver();
         loadAdminGroups();
+
         return groupChatPanel;
     }
+
+    private void initializeAdminObserver() {
+        try {
+            adminObserver = new ChatObserver() {
+                @Override
+                public void notifyNewMessage(String message, int chatId) throws RemoteException {
+                    if (selectedAdminGroup != null && chatId == selectedAdminGroup.getChatId()) {
+                        SwingUtilities.invokeLater(() -> {
+                            adminChatArea.append(message + "\n");
+                            // Auto-scroll to bottom
+                            adminChatArea.setCaretPosition(adminChatArea.getDocument().getLength());
+                        });
+                    }
+                }
+            };
+            adminObserverStub = (ChatObserver) UnicastRemoteObject.exportObject(adminObserver, 0);
+        } catch (RemoteException e) {
+            showError("Error initializing chat observer: " + e.getMessage());
+        }
+    }
+
+    private void updateChatSubscription() {
+        if (selectedAdminGroup != null) {
+            try {
+                // Unsubscribe from previous group
+                chatService.unsubscribe(currentAdminUser, adminObserverStub, null, selectedAdminGroup.getChatId());
+
+                // Subscribe to new group
+                ChatLog log = new ChatLog();
+                log.setStart_time(LocalDateTime.now());
+                chatService.subscribe(currentAdminUser, adminObserverStub, log, selectedAdminGroup.getChatId());
+            } catch (RemoteException e) {
+                showError("Error updating subscription: " + e.getMessage());
+            }
+        }
+    }
+
+    // Modified loadGroupMessages method
+    private void loadGroupMessages(int groupId) {
+        try {
+            adminChatArea.setText("");
+            List<ChatMessage> messages = chatService.getAllChatMessages(groupId);
+            for (ChatMessage msg : messages) {
+                adminChatArea.append(formatMessage(msg) + "\n");
+            }
+            // Auto-scroll to bottom
+            adminChatArea.setCaretPosition(adminChatArea.getDocument().getLength());
+        } catch (RemoteException e) {
+            showError("Failed to load messages: " + e.getMessage());
+        }
+    }
+
+    // Updated formatMessage method
+    private String formatMessage(ChatMessage msg) {
+        try {
+            return String.format("[%s] %s: %s",
+                    msg.getStart_at().format(DateTimeFormatter.ofPattern("HH:mm")),
+                    msg.getUser().getUsername(),
+                    msg.getMessage());
+        } catch (Exception e) {
+            return "[Error formatting message] " + msg.getMessage();
+        }
+    }
+
+    // Updated sendAdminGroupMessage method
+    private void sendAdminGroupMessage() {
+        if (selectedAdminGroup == null) {
+            showError("Please select a group first!");
+            return;
+        }
+
+        String message = adminMsgField.getText().trim();
+        if (message.isEmpty()) return;
+
+        try {
+            // Send through service
+            chatService.sendMessage(message, currentAdminUser, selectedAdminGroup.getChatId());
+            adminMsgField.setText("");
+        } catch (RemoteException e) {
+            showError("Failed to send message: " + e.getMessage());
+        }
+    }
+
 
     private void loadAdminGroups() {
         try {
@@ -232,6 +340,10 @@ public class AdminDashboardUI extends JFrame {
         }
     }
 
+
+
+
+
     private void styleGroupButton(JButton button) {
         button.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         button.setBackground(Color.WHITE);
@@ -253,50 +365,9 @@ public class AdminDashboardUI extends JFrame {
         }
     }
 
-    private void loadGroupMessages(int groupId) {
-        try {
-            adminChatArea.setText("");
-            List<ChatMessage> messages = chatService.getAllChatMessages(groupId);
-            for (ChatMessage msg : messages) {
-                adminChatArea.append(formatMessage(msg) + "\n");
-            }
-        } catch (RemoteException e) {
-            showError("Failed to load messages: " + e.getMessage());
-        }
-    }
 
-    private String formatMessage(ChatMessage msg) {
-        try {
-            User sender = userService.getUserById(msg.getSenderId());
-            return String.format("[%s] %s: %s",
-                    msg.getTimestamp().format(DateTimeFormatter.ofPattern("HH:mm")),
-                    sender.getUsername(),
-                    msg.getContent());
-        } catch (RemoteException e) {
-            return "[Error] Unknown sender: " + msg.getContent();
-        }
-    }
 
-    private void sendAdminGroupMessage() {
-        if (selectedAdminGroup == null) {
-            showError("Please select a group first!");
-            return;
-        }
 
-        String message = adminMsgField.getText().trim();
-        if (message.isEmpty()) return;
-
-        try {
-            String formattedMessage = String.format("[ADMIN] %s: %s",
-                    currentAdminUser.getUsername(), message);
-
-            chatService.sendGroupMessage(currentAdminUser, selectedAdminGroup.getChatId(), formattedMessage);
-            adminChatArea.append(formatAdminMessage(formattedMessage) + "\n");
-            adminMsgField.setText("");
-        } catch (RemoteException e) {
-            showError("Failed to send message: " + e.getMessage());
-        }
-    }
 
     private String formatAdminMessage(String rawMessage) {
         return String.format("[%s] %s",
