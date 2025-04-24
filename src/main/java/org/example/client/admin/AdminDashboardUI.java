@@ -1,6 +1,7 @@
 package org.example.client.admin;
 
 import org.example.domain.ChatGroup;
+import org.example.domain.ChatMessage;
 import org.example.domain.User;
 import org.example.rmi.ChatService;
 import org.example.rmi.UserService;
@@ -9,14 +10,19 @@ import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import javax.swing.SwingConstants;
 
@@ -28,6 +34,14 @@ public class AdminDashboardUI extends JFrame {
     private final UserService userService;
     private final ChatService chatService;
     private final User currentAdminUser;
+
+    private JPanel groupChatPanel;
+    private JTextArea adminChatArea;
+    private JTextField adminMsgField;
+    private JButton adminSendButton;
+    private JScrollPane adminGroupScroll;
+    private JPanel adminGroupButtonPanel;
+    private ChatGroup selectedAdminGroup;
 
     private JTable userTable;
     private JTable chatTable;
@@ -56,6 +70,7 @@ public class AdminDashboardUI extends JFrame {
         JTabbedPane tabbedPane = new ModernTabbedPane();
         tabbedPane.addTab("👥 User Management", createUserManagementPanel());
         tabbedPane.addTab("💬 Chat Management", createChatManagementPanel());
+        tabbedPane.addTab("💬 Group Chats", createAdminChatPanel());
 
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
         add(mainPanel);
@@ -153,6 +168,201 @@ public class AdminDashboardUI extends JFrame {
         return panel;
     }
 
+    private JPanel createAdminChatPanel() {
+        groupChatPanel = new JPanel(new BorderLayout());
+        groupChatPanel.setOpaque(false);
+        groupChatPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Group list panel
+        adminGroupButtonPanel = new JPanel();
+        adminGroupButtonPanel.setLayout(new BoxLayout(adminGroupButtonPanel, BoxLayout.Y_AXIS));
+        adminGroupScroll = new JScrollPane(adminGroupButtonPanel);
+        styleScrollPane(adminGroupScroll);
+
+        // Chat area
+        adminChatArea = new JTextArea();
+        adminChatArea.setEditable(false);
+        adminChatArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        JScrollPane chatScroll = new JScrollPane(adminChatArea);
+        styleScrollPane(chatScroll);
+
+        // Input panel
+        JPanel inputPanel = new JPanel(new BorderLayout(10, 10));
+        inputPanel.setOpaque(false);
+        adminMsgField = new JTextField();
+        adminSendButton = createIconButton("📤 Send", "Send message", this::sendAdminGroupMessage);
+
+        inputPanel.add(adminMsgField, BorderLayout.CENTER);
+        inputPanel.add(adminSendButton, BorderLayout.EAST);
+
+        // Add components
+        groupChatPanel.add(adminGroupScroll, BorderLayout.WEST);
+        groupChatPanel.add(chatScroll, BorderLayout.CENTER);
+        groupChatPanel.add(inputPanel, BorderLayout.SOUTH);
+
+        loadAdminGroups();
+        return groupChatPanel;
+    }
+
+    private void loadAdminGroups() {
+        try {
+            adminGroupButtonPanel.removeAll();
+            List<ChatGroup> groups = chatService.getAllChats();
+
+            for (ChatGroup group : groups) {
+                JButton groupBtn = new JButton(group.getChatName());
+                styleGroupButton(groupBtn);
+                groupBtn.addActionListener(e -> {
+                    selectedAdminGroup = group;
+                    loadGroupMessages(group.getChatId());
+                    highlightSelectedButton(groupBtn);
+                });
+                adminGroupButtonPanel.add(groupBtn);
+            }
+
+            adminGroupButtonPanel.revalidate();
+            adminGroupButtonPanel.repaint();
+
+            if (!groups.isEmpty()) {
+                selectedAdminGroup = groups.get(0);
+                loadGroupMessages(selectedAdminGroup.getChatId());
+            }
+        } catch (RemoteException e) {
+            showError("Failed to load groups: " + e.getMessage());
+        }
+    }
+
+    private void styleGroupButton(JButton button) {
+        button.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        button.setBackground(Color.WHITE);
+        button.setBorder(new CompoundBorder(
+                new LineBorder(new Color(220, 220, 220)),
+                new EmptyBorder(10, 15, 10, 15)
+        ));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        button.setMaximumSize(new Dimension(200, 40));
+    }
+
+    private void highlightSelectedButton(JButton selectedButton) {
+        for (Component comp : adminGroupButtonPanel.getComponents()) {
+            if (comp instanceof JButton) {
+                JButton btn = (JButton) comp;
+                btn.setBackground(btn == selectedButton ?
+                        new Color(63, 81, 181, 30) : Color.WHITE);
+            }
+        }
+    }
+
+    private void loadGroupMessages(int groupId) {
+        try {
+            adminChatArea.setText("");
+            List<ChatMessage> messages = chatService.getAllChatMessages(groupId);
+            for (ChatMessage msg : messages) {
+                adminChatArea.append(formatMessage(msg) + "\n");
+            }
+        } catch (RemoteException e) {
+            showError("Failed to load messages: " + e.getMessage());
+        }
+    }
+
+    private String formatMessage(ChatMessage msg) {
+        try {
+            User sender = userService.getUserById(msg.getSenderId());
+            return String.format("[%s] %s: %s",
+                    msg.getTimestamp().format(DateTimeFormatter.ofPattern("HH:mm")),
+                    sender.getUsername(),
+                    msg.getContent());
+        } catch (RemoteException e) {
+            return "[Error] Unknown sender: " + msg.getContent();
+        }
+    }
+
+    private void sendAdminGroupMessage() {
+        if (selectedAdminGroup == null) {
+            showError("Please select a group first!");
+            return;
+        }
+
+        String message = adminMsgField.getText().trim();
+        if (message.isEmpty()) return;
+
+        try {
+            String formattedMessage = String.format("[ADMIN] %s: %s",
+                    currentAdminUser.getUsername(), message);
+
+            chatService.sendGroupMessage(currentAdminUser, selectedAdminGroup.getChatId(), formattedMessage);
+            adminChatArea.append(formatAdminMessage(formattedMessage) + "\n");
+            adminMsgField.setText("");
+        } catch (RemoteException e) {
+            showError("Failed to send message: " + e.getMessage());
+        }
+    }
+
+    private String formatAdminMessage(String rawMessage) {
+        return String.format("[%s] %s",
+                new SimpleDateFormat("HH:mm").format(new Date()),
+                rawMessage);
+    }
+
+    // Add this to your existing styleScrollPane method
+    private void styleScrollPane(JScrollPane scrollPane) {
+        scrollPane.setBorder(new CompoundBorder(
+                new LineBorder(new Color(240, 240, 240)),
+                new EmptyBorder(10, 10, 10, 10)
+        ));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.getVerticalScrollBar().setUI(new ModernScrollBarUI());
+    }
+
+    // Add this helper method to style the message area
+//    private void styleScrollPane(JScrollPane scrollPane) {
+//        scrollPane.setBorder(new CompoundBorder(
+//                new LineBorder(new Color(240, 240, 240)),
+//                new EmptyBorder(10, 10, 10, 10)
+//        ));
+//        scrollPane.getViewport().setBackground(Color.WHITE);
+//        scrollPane.getVerticalScrollBar().setUI(new ModernScrollBarUI());
+//    }
+
+    // Add custom scrollbar UI
+    class ModernScrollBarUI extends BasicScrollBarUI {
+        private final Color SCROLL_BAR_COLOR = new Color(200, 200, 200);
+
+        @Override
+        protected void configureScrollBarColors() {
+            this.thumbColor = SCROLL_BAR_COLOR;
+            this.trackColor = BACKGROUND_COLOR;
+        }
+
+        @Override
+        protected JButton createDecreaseButton(int orientation) {
+            return createZeroButton();
+        }
+
+        @Override
+        protected JButton createIncreaseButton(int orientation) {
+            return createZeroButton();
+        }
+
+        private JButton createZeroButton() {
+            JButton button = new JButton();
+            button.setPreferredSize(new Dimension(0, 0));
+            button.setMinimumSize(new Dimension(0, 0));
+            button.setMaximumSize(new Dimension(0, 0));
+            return button;
+        }
+
+        @Override
+        protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(thumbColor);
+            g2.fillRoundRect(thumbBounds.x + 2, thumbBounds.y + 2,
+                    thumbBounds.width - 4, thumbBounds.height - 4, 8, 8);
+            g2.dispose();
+        }
+    }
+
     private void styleTable(JTable table) {
         table.setRowHeight(40);
         table.setShowVerticalLines(false);
@@ -171,14 +381,6 @@ public class AdminDashboardUI extends JFrame {
         DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
         headerRenderer.setHorizontalAlignment(SwingConstants.LEFT);
         table.getTableHeader().setDefaultRenderer(headerRenderer);
-    }
-
-    private void styleScrollPane(JScrollPane scrollPane) {
-        scrollPane.setBorder(new CompoundBorder(
-                new LineBorder(new Color(240, 240, 240)),
-                new EmptyBorder(10, 10, 10, 10)
-        ));
-        scrollPane.getViewport().setBackground(Color.WHITE);
     }
 
     private JButton createIconButton(String text, String tooltip, Runnable action) {
