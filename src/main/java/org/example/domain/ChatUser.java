@@ -16,20 +16,18 @@ public class ChatUser implements Serializable {
     @ManyToOne
     @MapsId("userId")
     @JoinColumn(name = "user_id", referencedColumnName = "user_id",
-            foreignKey = @ForeignKey(name = "FK_chat_user",
-                    foreignKeyDefinition = "FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE"))
+            foreignKey = @ForeignKey(name = "FK_chat_user"))
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne
     @MapsId("groupId")
     @JoinColumn(name = "group_id", referencedColumnName = "chatId",
-            foreignKey = @ForeignKey(name = "FK_chat_group",
-                    foreignKeyDefinition = "FOREIGN KEY (group_id) REFERENCES chatgroup(chatId) ON DELETE CASCADE"))
+            foreignKey = @ForeignKey(name = "FK_chat_group"))
     @OnDelete(action = OnDeleteAction.CASCADE)
     private ChatGroup chatGroup;
 
-    // Getters and Setters remain the same
+    // Getters and Setters
     public ChatUserId getId() { return id; }
     public void setId(ChatUserId id) { this.id = id; }
     public User getUser() { return user; }

@@ -25,7 +25,7 @@ public class ServerDemo {
             SessionFactory sessionFactory = configuration.buildSessionFactory();
             ChatService chatService = new ChatServiceImpl(sessionFactory);
             UserService userService = new UserServiceImpl(sessionFactory);
-            ChatLogService logService = new ChatLogServiceImpl();
+            ChatLogService logService = new ChatLogServiceImpl(sessionFactory);
 
             Registry registry = LocateRegistry.createRegistry(55545);
             registry.rebind("ChatService", chatService);

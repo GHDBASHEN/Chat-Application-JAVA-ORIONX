@@ -65,7 +65,7 @@ public class userDashBoard {
         usernameField.setText(currentUser.getUsername());
         passwordField.setText(currentUser.getPassword());
         nicknameField.setText(currentUser.getNickname());
-        profilePictureField.setText(currentUser.getProfile_picture());
+        profilePictureField.setText(currentUser.getProfilePicture());
 
         // Add action listener to the choose file button
         chooseFileButton.addActionListener(new ActionListener() {
@@ -254,16 +254,16 @@ public class userDashBoard {
 
                             // Update the path in the user object to the copied file
                             String newPath = destFile.getAbsolutePath();
-                            currentUser.setProfile_picture(newPath);
+                            currentUser.setProfilePicture(newPath);
                             // Update the UI to show the new path
                             profilePictureField.setText(newPath);
                         } catch (java.io.IOException ioEx) {
                             System.err.println("Error copying profile picture: " + ioEx.getMessage());
                             // If file copy fails, still save the original path
-                            currentUser.setProfile_picture(selectedFilePath);
+                            currentUser.setProfilePicture(selectedFilePath);
                         }
                     } else {
-                        currentUser.setProfile_picture(selectedFilePath);
+                        currentUser.setProfilePicture(selectedFilePath);
                     }
 
                     // Call service to update user
@@ -380,7 +380,7 @@ public class userDashBoard {
 
     // Method to update the profile picture in the UI
     private void updateProfilePicture() {
-        String profilePicPath = currentUser.getProfile_picture();
+        String profilePicPath = currentUser.getProfilePicture();
         if (profilePicPath != null && !profilePicPath.isEmpty()) {
             // Create a circular profile picture with 40x40 dimensions
             ImageIcon profileIcon = createCircularProfilePicture(profilePicPath, 40, 40);

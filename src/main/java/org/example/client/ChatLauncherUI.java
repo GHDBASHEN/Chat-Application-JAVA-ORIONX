@@ -14,6 +14,7 @@ import org.example.domain.ChatLog;
 import org.example.domain.User;
 import org.example.rmi.*;
 import org.example.server.impl.ChatLogServiceImpl;
+import org.hibernate.SessionFactory;
 
 public class ChatLauncherUI extends JFrame {
 
@@ -193,11 +194,12 @@ public class ChatLauncherUI extends JFrame {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
-                List<ChatLog> chatLogs = new ChatLogServiceImpl().getChatLogsWithNullEndTime();
+                SessionFactory sessionFactory = null;
+                List<ChatLog> chatLogs = new ChatLogServiceImpl(sessionFactory).getChatLogsWithNullEndTime();
                 if (!chatLogs.isEmpty()) {
                     for (ChatLog chatLog : chatLogs) {
                         chatLog.setEnd_time(LocalDateTime.now());
-                        new ChatLogServiceImpl().updateChatLog(chatLog);
+                        new ChatLogServiceImpl(sessionFactory).updateChatLog(chatLog);
                     }
                 }
             } catch (Exception ex) {
