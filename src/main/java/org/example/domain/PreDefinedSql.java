@@ -18,8 +18,8 @@ public class PreDefinedSql {
             Long count = (Long) session.createQuery("SELECT COUNT(c) FROM ChatGroup c").uniqueResult();
             if (count == 0) {
                 ChatGroup newch = new ChatGroup();
-                newch.setChatName("My Chat");
-                newch.setDescription("Myself chat");
+                newch.setChatName("Public Chat");
+                newch.setDescription("chat with everyone");
                 newch.setAdmin(null);
 
                 session.persist(newch);
