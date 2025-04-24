@@ -1,7 +1,11 @@
 package org.example.client.admin;
 
 import org.example.domain.ChatGroup;
+import org.example.domain.ChatLog;
+import org.example.domain.ChatMessage;
 import org.example.domain.User;
+import org.example.rmi.ChatLogService;
+import org.example.rmi.ChatObserver;
 import org.example.rmi.ChatService;
 import org.example.rmi.UserService;
 
@@ -9,6 +13,7 @@ import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -17,6 +22,11 @@ import java.awt.*;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import javax.swing.SwingConstants;
 
@@ -28,17 +38,48 @@ public class AdminDashboardUI extends JFrame {
     private final UserService userService;
     private final ChatService chatService;
     private final User currentAdminUser;
+    private final ChatLogService logService;
+    private ChatLog currentChatLog;
+    private int currentGroupId = -1;
+
+
+    private JPanel groupChatPanel;
+    private JTextArea adminChatArea;
+    private JTextField adminMsgField;
+    private JButton adminSendButton;
+    private JScrollPane adminGroupScroll;
+    private JPanel adminGroupButtonPanel;
+    private ChatGroup selectedAdminGroup;
+    private ChatObserver adminObserver;
+    private ChatObserver adminObserverStub;
 
     private JTable userTable;
     private JTable chatTable;
 
-    public AdminDashboardUI(User adminUser, UserService userService, ChatService chatService) {
+    public AdminDashboardUI(User adminUser, UserService userService, ChatService chatService, ChatLogService logService) {
         this.currentAdminUser = adminUser;
         this.userService = userService;
         this.chatService = chatService;
+        this.logService = logService;
         initializeUI();
         loadData();
+
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                try {
+                    if (currentChatLog != null && adminObserverStub != null) {
+                        chatService.unsubscribeFromChat(currentAdminUser, adminObserverStub, currentChatLog, currentGroupId);
+                        logService.logout(currentAdminUser.getUser_id());
+                    }
+                } catch (RemoteException e) {
+                    System.err.println("Cleanup error: " + e.getMessage());
+                }
+            }
+        });
     }
+
+
 
     private void initializeUI() {
         setTitle("Admin Dashboard");
@@ -56,10 +97,12 @@ public class AdminDashboardUI extends JFrame {
         JTabbedPane tabbedPane = new ModernTabbedPane();
         tabbedPane.addTab("👥 User Management", createUserManagementPanel());
         tabbedPane.addTab("💬 Chat Management", createChatManagementPanel());
+        tabbedPane.addTab("💬 Group Chats", createAdminChatPanel());
 
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
         add(mainPanel);
         setVisible(true);
+
     }
 
     private JPanel createHeaderPanel() {
@@ -153,6 +196,328 @@ public class AdminDashboardUI extends JFrame {
         return panel;
     }
 
+    private JPanel createAdminChatPanel() {
+        groupChatPanel = new JPanel(new BorderLayout());
+        groupChatPanel.setOpaque(false);
+        groupChatPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Group list panel
+        adminGroupButtonPanel = new JPanel();
+        adminGroupButtonPanel.setLayout(new BoxLayout(adminGroupButtonPanel, BoxLayout.Y_AXIS));
+        adminGroupScroll = new JScrollPane(adminGroupButtonPanel);
+        styleScrollPane(adminGroupScroll);
+
+        // Chat area
+        adminChatArea = new JTextArea();
+        adminChatArea.setEditable(false);
+        adminChatArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        JScrollPane chatScroll = new JScrollPane(adminChatArea);
+        styleScrollPane(chatScroll);
+
+        // Input panel
+        JPanel inputPanel = new JPanel(new BorderLayout(10, 10));
+        inputPanel.setOpaque(false);
+        adminMsgField = new JTextField();
+        adminSendButton = createIconButton("📤 Send", "Send message", this::sendAdminGroupMessage);
+
+        // Enable Enter key for sending
+        adminMsgField.addActionListener(e -> sendAdminGroupMessage());
+
+        inputPanel.add(adminMsgField, BorderLayout.CENTER);
+        inputPanel.add(adminSendButton, BorderLayout.EAST);
+
+        // Add components
+        groupChatPanel.add(adminGroupScroll, BorderLayout.WEST);
+        groupChatPanel.add(chatScroll, BorderLayout.CENTER);
+        groupChatPanel.add(inputPanel, BorderLayout.SOUTH);
+
+        // Initialize chat observer
+        initializeAdminObserver();
+        loadAdminGroups();
+       // initializeAdminChatComponents();
+        return groupChatPanel;
+    }
+
+    private void initializeAdminObserver() {
+        try {
+            adminObserver = new ChatObserver() {
+                @Override
+                public void notifyNewMessage(String message, int chatId) throws RemoteException {
+                    if (currentGroupId == chatId) {
+                        SwingUtilities.invokeLater(() -> {
+                            adminChatArea.append(message + "\n");
+                            adminChatArea.setCaretPosition(adminChatArea.getDocument().getLength());
+                        });
+                    }
+                }
+            };
+
+            // Export observer immediately
+            adminObserverStub = (ChatObserver) UnicastRemoteObject.exportObject(adminObserver, 0);
+            System.out.println("Observer initialized: " + (adminObserverStub != null));
+
+        } catch (RemoteException e) {
+            showError("Observer initialization failed: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void initializeAdminChatComponents() {
+        try {
+            // Initialize observer
+            adminObserver = new ChatObserver() {
+                @Override
+                public void notifyNewMessage(String message, int chatId) throws RemoteException {
+                    if (currentGroupId == chatId) {
+                        SwingUtilities.invokeLater(() -> {
+                            adminChatArea.append(message + "\n");
+                            adminChatArea.setCaretPosition(adminChatArea.getDocument().getLength());
+                        });
+                    }
+                }
+            };
+
+            adminObserverStub = (ChatObserver) UnicastRemoteObject.exportObject(adminObserver, 0);
+        } catch (RemoteException e) {
+            showError("Error initializing chat observer: " + e.getMessage());
+        }
+    }
+
+    private void handleGroupSelection(int groupId) {
+        try {
+            // Add null checks before unsubscribe
+            if (currentGroupId != -1) {
+                if (adminObserverStub != null && currentChatLog != null) {
+                    chatService.unsubscribeFromChat(currentAdminUser, adminObserverStub, currentChatLog, currentGroupId);
+                    logService.logout(currentAdminUser.getUser_id());
+                } else {
+                    System.err.println("Skipping unsubscribe - observer or chatlog null");
+                }
+            }
+
+            // Initialize new session
+            currentChatLog = logService.login(currentAdminUser.getUser_id());
+            if (currentChatLog == null) {
+                showError("Failed to create chat session");
+                return;
+            }
+
+            chatService.subscribe(currentAdminUser, adminObserverStub, currentChatLog, groupId);
+            currentGroupId = groupId;
+            loadGroupMessages(groupId);
+
+        } catch (RemoteException e) {
+            showError("Connection error: " + e.getMessage());
+        }
+    }
+
+    // Update loadAdminGroups method
+    private void loadAdminGroups() {
+        try {
+            adminGroupButtonPanel.removeAll();
+            List<ChatGroup> groups = chatService.getAllChats();
+
+            for (ChatGroup group : groups) {
+                JButton groupBtn = new JButton(group.getChatName());
+                styleGroupButton(groupBtn);
+                groupBtn.addActionListener(e -> {
+                    // Ensure observer exists before handling selection
+                    if (adminObserverStub == null) {
+                        showError("Chat observer not initialized");
+                        return;
+                    }
+                    selectedAdminGroup = group;
+                    handleGroupSelection(group.getChatId());
+                    highlightSelectedButton(groupBtn);
+                });
+                adminGroupButtonPanel.add(groupBtn);
+            }
+
+            if (!groups.isEmpty()) {
+                selectedAdminGroup = groups.get(0);
+                handleGroupSelection(selectedAdminGroup.getChatId());
+            }
+        } catch (RemoteException e) {
+            showError("Failed to load groups: " + e.getMessage());
+        }
+    }
+
+    // Update sendAdminGroupMessage method
+    private void sendAdminGroupMessage() {
+        // Validate all required components
+        if (selectedAdminGroup == null) {
+            showError("Please select a group first!");
+            return;
+        }
+
+        if (currentAdminUser == null) {
+            showError("Admin session expired");
+            return;
+        }
+
+        if (logService == null || chatService == null) {
+            showError("Chat services unavailable");
+            return;
+        }
+
+        String message = adminMsgField.getText().trim();
+        if (message.isEmpty()) return;
+
+        try {
+            // Verify online status and group ID
+            if (!logService.isUserOnline(currentAdminUser.getUser_id())) {
+                showError("You appear offline. Cannot send messages.");
+                return;
+            }
+
+            if (currentGroupId == -1) {
+                showError("No active chat group");
+                return;
+            }
+
+            // Send through service
+            chatService.sendAdminMessage(
+                    "[ADMIN] " + message, // Add admin prefix
+                    currentAdminUser,
+                    currentGroupId
+            );
+            adminMsgField.setText("");
+
+        } catch (RemoteException e) {
+            showError("Failed to send message: " + e.getCause().getMessage());
+        }
+    }
+
+//    private void initializeAdminObserver() {
+//        try {
+//            adminObserver = new ChatObserver() {
+//                @Override
+//                public void notifyNewMessage(String message, int chatId) throws RemoteException {
+//                    if (selectedAdminGroup != null && chatId == selectedAdminGroup.getChatId()) {
+//                        SwingUtilities.invokeLater(() -> {
+//                            adminChatArea.append(message + "\n");
+//                            // Auto-scroll to bottom
+//                            adminChatArea.setCaretPosition(adminChatArea.getDocument().getLength());
+//                        });
+//                    }
+//                }
+//            };
+//            adminObserverStub = (ChatObserver) UnicastRemoteObject.exportObject(adminObserver, 0);
+//        } catch (RemoteException e) {
+//            showError("Error initializing chat observer: " + e.getMessage());
+//        }
+//    }
+
+
+
+
+    // Modified loadGroupMessages method
+    private void loadGroupMessages(int groupId) {
+        try {
+            adminChatArea.setText("");
+            List<ChatMessage> messages = chatService.getAllChatMessages(groupId);
+            for (ChatMessage msg : messages) {
+                adminChatArea.append(formatMessage(msg) + "\n");
+            }
+            // Auto-scroll to bottom
+            adminChatArea.setCaretPosition(adminChatArea.getDocument().getLength());
+        } catch (RemoteException e) {
+            showError("Failed to load messages: " + e.getMessage());
+        }
+    }
+
+    // Updated formatMessage method
+    private String formatMessage(ChatMessage msg) {
+        try {
+            return String.format("[%s] %s: %s",
+                    msg.getStart_at().format(DateTimeFormatter.ofPattern("HH:mm")),
+                    msg.getUser().getUsername(),
+                    msg.getMessage());
+        } catch (Exception e) {
+            return "[Error formatting message] " + msg.getMessage();
+        }
+    }
+
+
+
+
+
+
+
+    private void styleGroupButton(JButton button) {
+        button.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        button.setBackground(Color.WHITE);
+        button.setBorder(new CompoundBorder(
+                new LineBorder(new Color(220, 220, 220)),
+                new EmptyBorder(10, 15, 10, 15)
+        ));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        button.setMaximumSize(new Dimension(200, 40));
+    }
+
+    private void highlightSelectedButton(JButton selectedButton) {
+        for (Component comp : adminGroupButtonPanel.getComponents()) {
+            if (comp instanceof JButton) {
+                JButton btn = (JButton) comp;
+                btn.setBackground(btn == selectedButton ?
+                        new Color(63, 81, 181, 30) : Color.WHITE);
+            }
+        }
+    }
+
+
+
+    // Add this to your existing styleScrollPane method
+    private void styleScrollPane(JScrollPane scrollPane) {
+        scrollPane.setBorder(new CompoundBorder(
+                new LineBorder(new Color(240, 240, 240)),
+                new EmptyBorder(10, 10, 10, 10)
+        ));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.getVerticalScrollBar().setUI(new ModernScrollBarUI());
+    }
+
+
+
+    // Add custom scrollbar UI
+    class ModernScrollBarUI extends BasicScrollBarUI {
+        private final Color SCROLL_BAR_COLOR = new Color(200, 200, 200);
+
+        @Override
+        protected void configureScrollBarColors() {
+            this.thumbColor = SCROLL_BAR_COLOR;
+            this.trackColor = BACKGROUND_COLOR;
+        }
+
+        @Override
+        protected JButton createDecreaseButton(int orientation) {
+            return createZeroButton();
+        }
+
+        @Override
+        protected JButton createIncreaseButton(int orientation) {
+            return createZeroButton();
+        }
+
+        private JButton createZeroButton() {
+            JButton button = new JButton();
+            button.setPreferredSize(new Dimension(0, 0));
+            button.setMinimumSize(new Dimension(0, 0));
+            button.setMaximumSize(new Dimension(0, 0));
+            return button;
+        }
+
+        @Override
+        protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(thumbColor);
+            g2.fillRoundRect(thumbBounds.x + 2, thumbBounds.y + 2,
+                    thumbBounds.width - 4, thumbBounds.height - 4, 8, 8);
+            g2.dispose();
+        }
+    }
+
     private void styleTable(JTable table) {
         table.setRowHeight(40);
         table.setShowVerticalLines(false);
@@ -171,14 +536,6 @@ public class AdminDashboardUI extends JFrame {
         DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
         headerRenderer.setHorizontalAlignment(SwingConstants.LEFT);
         table.getTableHeader().setDefaultRenderer(headerRenderer);
-    }
-
-    private void styleScrollPane(JScrollPane scrollPane) {
-        scrollPane.setBorder(new CompoundBorder(
-                new LineBorder(new Color(240, 240, 240)),
-                new EmptyBorder(10, 10, 10, 10)
-        ));
-        scrollPane.getViewport().setBackground(Color.WHITE);
     }
 
     private JButton createIconButton(String text, String tooltip, Runnable action) {
@@ -406,6 +763,7 @@ public class AdminDashboardUI extends JFrame {
                 Registry registry = LocateRegistry.getRegistry("localhost", 55545);
                 UserService userService = (UserService) registry.lookup("UserService");
                 ChatService chatService = (ChatService) registry.lookup("ChatService");
+                ChatLogService logService = (ChatLogService) registry.lookup("ChatLogService");
 
                 // Get admin user properly
                 User adminUser = userService.getUserByUsername("admin");
@@ -413,7 +771,7 @@ public class AdminDashboardUI extends JFrame {
                     JOptionPane.showMessageDialog(null, "Admin user not found!");
                     return;
                 }
-                new AdminDashboardUI(adminUser, userService, chatService);
+                new AdminDashboardUI(adminUser, userService, chatService, logService);
             } catch (Exception e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
