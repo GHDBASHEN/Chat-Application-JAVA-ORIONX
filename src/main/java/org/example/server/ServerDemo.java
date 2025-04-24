@@ -21,6 +21,7 @@ public class ServerDemo {
             configuration.addAnnotatedClass(ChatUser.class);
             configuration.addAnnotatedClass(ChatGroup.class);
             configuration.addAnnotatedClass(ChatMessage.class);
+            configuration.addAnnotatedClass(ChatLog.class);
             SessionFactory sessionFactory = configuration.buildSessionFactory();
             ChatService chatService = new ChatServiceImpl(sessionFactory);
             UserService userService = new UserServiceImpl(sessionFactory);
