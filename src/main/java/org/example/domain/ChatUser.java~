@@ -13,15 +13,16 @@ public class ChatUser implements Serializable {
 
     @ManyToOne
     @MapsId("userId")
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     private User user;
 
     @ManyToOne
     @MapsId("groupId")
-    @JoinColumn(name = "group_id")
+    @JoinColumn(name = "group_id", referencedColumnName = "chatId")
     private ChatGroup chatGroup;
 
     // Getters and Setters
+
     public ChatUserId getId() {
         return id;
     }
