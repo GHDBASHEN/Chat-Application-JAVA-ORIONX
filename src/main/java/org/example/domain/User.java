@@ -1,11 +1,11 @@
 package org.example.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-
+import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class User implements Serializable {
@@ -19,10 +19,26 @@ public class User implements Serializable {
     private String username;
     private String password;
     private String nickname;
-    private String profile_picture;
+
+    @Column(name = "profile_picture")
+    private String profilePicture;
+
     private String role;
 
+    // Relationships
+    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private List<ChatGroup> administeredGroups = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private List<ChatUser> groupMemberships = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private List<ChatMessage> messages = new ArrayList<>();
+
+    // Getters and Setters
     public int getUser_id() {
         return user_id;
     }
@@ -63,12 +79,12 @@ public class User implements Serializable {
         this.nickname = nickname;
     }
 
-    public String getProfile_picture() {
-        return profile_picture;
+    public String getProfilePicture() {
+        return profilePicture;
     }
 
-    public void setProfile_picture(String profile_picture) {
-        this.profile_picture = profile_picture;
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
     }
 
     public String getRole() {
@@ -77,5 +93,29 @@ public class User implements Serializable {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public List<ChatGroup> getAdministeredGroups() {
+        return administeredGroups;
+    }
+
+    public void setAdministeredGroups(List<ChatGroup> administeredGroups) {
+        this.administeredGroups = administeredGroups;
+    }
+
+    public List<ChatUser> getGroupMemberships() {
+        return groupMemberships;
+    }
+
+    public void setGroupMemberships(List<ChatUser> groupMemberships) {
+        this.groupMemberships = groupMemberships;
+    }
+
+    public List<ChatMessage> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(List<ChatMessage> messages) {
+        this.messages = messages;
     }
 }

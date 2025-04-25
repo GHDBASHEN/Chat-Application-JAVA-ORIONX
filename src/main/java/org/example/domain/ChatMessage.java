@@ -1,13 +1,12 @@
 package org.example.domain;
 
 import jakarta.persistence.*;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "chat_messages")
-public class ChatMessage  implements Serializable {
+@Table(name = "chat_message")
+public class ChatMessage implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -15,11 +14,18 @@ public class ChatMessage  implements Serializable {
     private int message_id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "chat_id", nullable = false)
+    private ChatGroup chatGroup;
+
+    @Column(nullable = false)
     private String message;
-    private LocalDateTime send_at;
+
+    @Column(name = "start_at", nullable = false)
+    private LocalDateTime start_at;
 
     public int getMessage_id() {
         return message_id;
@@ -37,6 +43,14 @@ public class ChatMessage  implements Serializable {
         this.user = user;
     }
 
+    public ChatGroup getChatGroup() {
+        return chatGroup;
+    }
+
+    public void setChatGroup(ChatGroup chatGroup) {
+        this.chatGroup = chatGroup;
+    }
+
     public String getMessage() {
         return message;
     }
@@ -45,12 +59,12 @@ public class ChatMessage  implements Serializable {
         this.message = message;
     }
 
-    public LocalDateTime getSend_at() {
-        return send_at;
+    public LocalDateTime getStart_at() {
+        return start_at;
     }
 
-    public void setSend_at(LocalDateTime send_at) {
-        this.send_at = send_at;
+    public void setStart_at(LocalDateTime start_at) {
+        this.start_at = start_at;
     }
 
     @Override
@@ -58,8 +72,9 @@ public class ChatMessage  implements Serializable {
         return "ChatMessage{" +
                 "message_id=" + message_id +
                 ", user=" + user +
+                ", chatGroup=" + chatGroup +
                 ", message='" + message + '\'' +
-                ", send_at=" + send_at +
+                ", start_at=" + start_at +
                 '}';
     }
 }

@@ -1,5 +1,7 @@
 package org.example.server.impl;
 
+import jakarta.persistence.EntityManager;
+import org.example.domain.ChatGroup;
 import org.example.domain.User;
 import org.example.rmi.UserService;
 import org.hibernate.Session;
@@ -18,7 +20,13 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
 
     @Override
     public User getUserByUsername(String username) throws RemoteException {
-        return null;
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("FROM User WHERE username = :username", User.class)
+                    .setParameter("username", username)
+                    .uniqueResult();
+        } catch (Exception e) {
+            throw new RemoteException("Error finding user", e);
+        }
     }
 
     @Override
@@ -32,15 +40,33 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
 
     @Override
     public void deleteUser(int userId) throws RemoteException {
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            User user = session.get(User.class, userId);
-            if (user != null) {
-                session.delete(user);
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+
+            // 1. Find all groups where user is admin
+            List<ChatGroup> adminGroups = em.createQuery(
+                            "SELECT g FROM ChatGroup g WHERE g.admin.user_id = :userId", ChatGroup.class)
+                    .setParameter("userId", userId)
+                    .getResultList();
+
+            // 2. Update groups to remove admin reference
+            for (ChatGroup group : adminGroups) {
+                group.setAdmin(null); // Or set to another admin
             }
-            session.getTransaction().commit();
+
+            // 3. Now delete the user
+            User user = em.find(User.class, userId);
+            if (user != null) {
+                em.remove(user);
+            }
+
+            em.getTransaction().commit();
         } catch (Exception e) {
-            throw new RemoteException("Error deleting user", e);
+            em.getTransaction().rollback();
+            throw new RemoteException("Error deleting user: " + e.getMessage());
+        } finally {
+            em.close();
         }
     }
 
