@@ -11,6 +11,8 @@ public interface UserService extends Remote {
 
     User getUser(int id) throws RemoteException;
     User checkEmailAndPassword(String email, String password) throws RemoteException;
-
-
+    void updateUser(User user) throws RemoteException;
 }
+
+
+
