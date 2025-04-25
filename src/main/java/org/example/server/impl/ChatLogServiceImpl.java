@@ -17,14 +17,15 @@ import java.util.List;
 public class ChatLogServiceImpl extends UnicastRemoteObject implements ChatLogService {
     private final SessionFactory sessionFactory;
 
-    public ChatLogServiceImpl() throws RemoteException {
-        super();
+    public ChatLogServiceImpl(SessionFactory sessionFactory) throws RemoteException {
+//        super();
+        this.sessionFactory = sessionFactory;
 
-        Configuration configuration = new Configuration();
-        configuration.addAnnotatedClass(User.class);
-        configuration.addAnnotatedClass(ChatLog.class); // Make sure to include ChatLog
-        configuration.configure("hibernate.cfg.xml");
-        this.sessionFactory = configuration.buildSessionFactory();
+//        Configuration configuration = new Configuration();
+//        configuration.addAnnotatedClass(User.class);
+//        configuration.addAnnotatedClass(ChatLog.class); // Make sure to include ChatLog
+//        configuration.configure("hibernate.cfg.xml");
+//        this.sessionFactory = configuration.buildSessionFactory();
     }
 
     @Override
