@@ -68,6 +68,35 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
     }
 
     @Override
+    public List<User> getUsersInChat(int chatId) throws RemoteException {
+        try (Session session = sessionFactory.openSession()) {
+            ChatGroup group = session.get(ChatGroup.class, chatId);
+            return new ArrayList<>(group.getParticipants());
+        } catch (Exception e) {
+            throw new RemoteException("Error fetching users", e);
+        }
+    }
+
+    @Override
+    public void removeUserFromChat(int userId, int chatId) throws RemoteException {
+        try (Session session = sessionFactory.openSession()) {
+            Transaction tx = session.beginTransaction();
+
+            ChatGroup group = session.get(ChatGroup.class, chatId);
+            User user = session.get(User.class, userId);
+
+            if (group != null && user != null) {
+                group.getParticipants().remove(user);
+                session.update(group);
+            }
+
+            tx.commit();
+        } catch (Exception e) {
+            throw new RemoteException("Error removing user", e);
+        }
+    }
+
+    @Override
     public void subscribeToChat(int userId, int chatId) throws RemoteException {
 
     }

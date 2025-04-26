@@ -190,7 +190,7 @@ public class AdminDashboardUI extends JFrame {
         controlPanel.add(createIconButton("➕ New Chat Group", "Create new Chat Group", this::createChat));
         controlPanel.add(createIconButton("👥 Delete Chat Group", "Delete Existing Chat Group", this::deleteChat));
         controlPanel.add(createIconButton("👥 Add Group Members", "Add users to Chat Group", this::createChatUser));
-        controlPanel.add(createIconButton("👥 Remove Group Members", "Remove users from Chat Group", this::createChatUser));
+        controlPanel.add(createIconButton("👥 View / Remove Group Members", "View and Remove users from Chat Group", this::manageGroupUsers));
 
         panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(controlPanel, BorderLayout.SOUTH);
@@ -747,6 +747,62 @@ public class AdminDashboardUI extends JFrame {
             showError("Failed to delete user: " + e.getMessage());
         } catch (Exception e) {
             showError("Error: " + e.getMessage());
+        }
+    }
+
+    private void manageGroupUsers() {
+        try {
+            int selectedRow = chatTable.getSelectedRow();
+            if (selectedRow == -1) {
+                showError("Please select a chat group first!");
+                return;
+            }
+
+            int chatId = (Integer) chatTable.getValueAt(selectedRow, 0);
+            List<User> groupUsers = chatService.getUsersInChat(chatId);
+
+            JPanel userListPanel = new JPanel();
+            userListPanel.setLayout(new BoxLayout(userListPanel, BoxLayout.Y_AXIS));
+
+            for (User user : groupUsers) {
+                JPanel userPanel = new JPanel(new BorderLayout());
+                userPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+                JLabel userLabel = new JLabel(user.getUsername() + " (" + user.getEmail() + ")");
+                JButton removeButton = new JButton("Remove");
+                removeButton.addActionListener(e -> removeUserFromChat(user.getUser_id(), chatId));
+
+                userPanel.add(userLabel, BorderLayout.CENTER);
+                userPanel.add(removeButton, BorderLayout.EAST);
+                userListPanel.add(userPanel);
+            }
+
+            JScrollPane scrollPane = new JScrollPane(userListPanel);
+            scrollPane.setPreferredSize(new Dimension(400, 300));
+
+            JOptionPane.showMessageDialog(this, scrollPane,
+                    "Manage Users in " + chatTable.getValueAt(selectedRow, 1),
+                    JOptionPane.PLAIN_MESSAGE);
+
+        } catch (RemoteException e) {
+            showError("Error loading users: " + e.getMessage());
+        }
+    }
+
+    private void removeUserFromChat(int userId, int chatId) {
+        try {
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Are you sure you want to remove this user?",
+                    "Confirm Removal",
+                    JOptionPane.YES_NO_OPTION);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                chatService.removeUserFromChat(userId, chatId);
+                manageGroupUsers(); // Refresh the list
+            }
+        } catch (RemoteException e) {
+            showError("Failed to remove user: " + e.getMessage());
         }
     }
 
