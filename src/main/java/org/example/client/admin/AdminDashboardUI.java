@@ -429,10 +429,14 @@ public class AdminDashboardUI extends JFrame {
     // Updated formatMessage method
     private String formatMessage(ChatMessage msg) {
         try {
-            return String.format("[%s] %s: %s",
+            String username = msg.getUser().getUsername();
+            String rawMessage = msg.getMessage();
+
+            // Remove redundant username prefixes
+            String cleanedMessage = rawMessage.replaceAll("\\d{1,2}:\\d{2} [AP]M$", "").trim();
+            return String.format("[%s]  %s",
                     msg.getStart_at().format(DateTimeFormatter.ofPattern("HH:mm")),
-                    msg.getUser().getUsername(),
-                    msg.getMessage());
+                    cleanedMessage);
         } catch (Exception e) {
             return "[Error formatting message] " + msg.getMessage();
         }

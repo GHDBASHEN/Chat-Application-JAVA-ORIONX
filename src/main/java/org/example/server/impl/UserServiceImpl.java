@@ -119,7 +119,7 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
     }
 
 
-    @Override
+
 //    public List<ChatGroup> getGroupDataByUserId(int userId) throws RemoteException {
 //        System.out.println("Hsusususu"+userId);
 //        try (Session session = sessionFactory.openSession()) {
@@ -131,6 +131,7 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
 //            throw new RemoteException("Error fetching group names for user", e);
 //        }
 //    }
+    @Override
     public List<ChatGroup> getGroupDataByUserId(int userId) throws RemoteException {
         System.out.println("Fetching groups for user ID: " + userId);
         try (Session session = sessionFactory.openSession()) {
