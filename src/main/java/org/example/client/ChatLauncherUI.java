@@ -82,7 +82,7 @@ public class ChatLauncherUI extends JFrame {
         registerButton = new JButton("Register");
         registerButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
         registerButton.setBackground(new Color(183, 59, 198));
-        registerButton.setForeground(Color.WHITE);
+        //registerButton.setForeground(Color.WHITE);
         registerButton.setFocusPainted(false);
         registerButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
@@ -134,7 +134,7 @@ public class ChatLauncherUI extends JFrame {
         button.setPreferredSize(new Dimension(120, 40));
         button.setFont(new Font("Segoe UI", Font.BOLD, 14));
         button.setBackground(bgColor);
-        button.setForeground(Color.WHITE);
+        //button.setForeground(Color.WHITE);
         button.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         button.setFocusPainted(false);
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
