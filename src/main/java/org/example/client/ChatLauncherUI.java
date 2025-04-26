@@ -14,6 +14,8 @@ import org.example.domain.ChatLog;
 import org.example.domain.User;
 import org.example.rmi.*;
 import org.example.server.impl.ChatLogServiceImpl;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 
 public class ChatLauncherUI extends JFrame {
 
@@ -80,14 +82,14 @@ public class ChatLauncherUI extends JFrame {
         registerButton = new JButton("Register");
         registerButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
         registerButton.setBackground(new Color(183, 59, 198));
-        registerButton.setForeground(Color.WHITE);
+        //registerButton.setForeground(Color.WHITE);
         registerButton.setFocusPainted(false);
         registerButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
 
 
         registerButton.addActionListener(e -> {
-            new RegisterUI(userService);
+            new RegisterUI(userService, chatService);
         });
 
 
@@ -132,7 +134,7 @@ public class ChatLauncherUI extends JFrame {
         button.setPreferredSize(new Dimension(120, 40));
         button.setFont(new Font("Segoe UI", Font.BOLD, 14));
         button.setBackground(bgColor);
-        button.setForeground(Color.WHITE);
+        //button.setForeground(Color.WHITE);
         button.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         button.setFocusPainted(false);
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -166,12 +168,13 @@ public class ChatLauncherUI extends JFrame {
             if (user != null) {
                 if (user.getRole().equalsIgnoreCase("admin")) {
                     User adminUser = userService.getUserByUsername(user.getUsername());
-                    new AdminDashboardUI(adminUser, userService, chatService);
+                    new AdminDashboardUI(adminUser, userService, chatService, logService);
                 }
                  else {
-                    new userDashBoard(chatService, userService, logService, chatLog).handle(user);
+                    new userDashBoard(chatService, userService, logService, chatLog, user).handle();
                 }
-                dispose(); // Close login window
+                dispose();
+
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid credentials!", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -193,11 +196,12 @@ public class ChatLauncherUI extends JFrame {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
-                List<ChatLog> chatLogs = new ChatLogServiceImpl().getChatLogsWithNullEndTime();
+                SessionFactory sessionFactory = null;
+                List<ChatLog> chatLogs = new ChatLogServiceImpl(sessionFactory).getChatLogsWithNullEndTime();
                 if (!chatLogs.isEmpty()) {
                     for (ChatLog chatLog : chatLogs) {
                         chatLog.setEnd_time(LocalDateTime.now());
-                        new ChatLogServiceImpl().updateChatLog(chatLog);
+                        new ChatLogServiceImpl(sessionFactory).updateChatLog(chatLog);
                     }
                 }
             } catch (Exception ex) {

@@ -1,4 +1,6 @@
 package org.example.server.impl;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.example.domain.*;
 import org.example.rmi.*;
 import org.hibernate.Session;
@@ -7,6 +9,7 @@ import org.hibernate.Transaction;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +19,12 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
     private final SessionFactory sessionFactory;
     public ChatServiceImpl(SessionFactory sessionFactory) throws RemoteException {
         this.sessionFactory = sessionFactory;
+        this.observers = new ArrayList<>();
     }
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Override
     public User getUserByUsername(String username) throws RemoteException {
         try (Session session = sessionFactory.openSession()) {
@@ -48,8 +56,34 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
     }
 
     @Override
-    public void unsubscribeFromChat(int userId, int chatId) throws RemoteException {
+    public void unsubscribeFromChat(User user, ChatObserver observer, ChatLog chatLog, int chatId) throws RemoteException {
+        try {
+            // Add null checks
+            if (observer == null) {
+                System.err.println("Attempted to unsubscribe null observer");
+                return;
+            }
 
+            if (observers == null) {
+                System.err.println("Observers list not initialized");
+                return;
+            }
+
+            // Remove observer safely
+            if (observers.remove(observer)) {
+                System.out.println("Unsubscribed user " + user.getUsername() + " from chat " + chatId);
+
+                // Additional cleanup logic
+                if (chatLog != null) {
+                    chatLog.setEnd_time(LocalDateTime.now());
+                    // Persist chat log changes if needed
+                }
+            } else {
+                System.err.println("Observer not found in subscribers list");
+            }
+        } catch (Exception e) {
+            throw new RemoteException("Unsubscribe failed", e);
+        }
     }
 
     @Override
@@ -57,10 +91,21 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
         return List.of();
     }
 
-    @Override
-    public void sendMessage(Message message) throws RemoteException {
 
+    @Override
+    public List<ChatMessage> getAllChatMessages(int chatId) throws RemoteException {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery(
+                            "SELECT m FROM ChatMessage m WHERE m.chatGroup.chatId = :chatId ORDER BY m.start_at ASC",
+                            ChatMessage.class
+                    )
+                    .setParameter("chatId", chatId)
+                    .list();
+        } catch (Exception e) {
+            throw new RemoteException("Error fetching chat messages", e);
+        }
     }
+
 
     @Override
     public List<ChatGroup> getAllChats() throws RemoteException {
@@ -75,30 +120,61 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
     }
 
     @Override
-    public void sendMessage(String message, User sender) throws RemoteException {
-        // Save to DB (add your Hibernate code here)
+    public void sendMessage(String message, User sender, int chatId) throws RemoteException {
+        Transaction tx = null;
+        try (Session session = sessionFactory.openSession()) {
+            System.out.println("test 1");
+            tx = session.beginTransaction();
 
-        notifyAllObservers(sender.getNickname() + ": " + message);
+            // Load existing ChatGroup from DB
+            ChatGroup chatGroup = session.get(ChatGroup.class, chatId);
+            System.out.println("test 2");
+            if (chatGroup == null) {
+                throw new IllegalArgumentException("Chat group not found with id: " + chatId);
+            }
+
+            System.out.println("test 3");
+            ChatMessage chatMessage = new ChatMessage();
+            chatMessage.setUser(sender); // sender must also be attached/managed
+            chatMessage.setChatGroup(chatGroup);
+            chatMessage.setMessage(sender.getNickname() + ": " + message);
+            chatMessage.setStart_at(LocalDateTime.now());
+
+            session.persist(chatMessage);
+
+            tx.commit();
+            System.out.println("Message sent and saved to DB");
+
+            notifyAllObservers(sender.getNickname() + ": " + message, chatId);
+        } catch (Exception e) {
+            if (tx != null && tx.getStatus().canRollback()) {
+                tx.rollback();
+            }
+            throw new RemoteException("Error sending message", e);
+        }
     }
 
+
     @Override
-    public void subscribe(User user, ChatObserver observer, ChatLog chatLog) throws RemoteException {
+    public void subscribe(User user, ChatObserver observer, ChatLog chatLog, int chatId) throws RemoteException {
         observers.add(observer);
 
         // Get the formatted time
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
         String formattedTime = chatLog.getStart_time().format(formatter);
-        notifyAllObservers(user.getNickname() + " joined: "+ formattedTime); // Send message to all observers
+        sendMessage(user.getNickname() + " joined: " + formattedTime, user, chatId);
+        notifyAllObservers(user.getNickname() + " joined: "+ formattedTime, chatId); // Send message to all observers
     }
 
     @Override
-    public void unsubscribe(User user, ChatObserver observer, ChatLog chatLog) throws RemoteException {
+    public void unsubscribe(User user, ChatObserver observer, ChatLog chatLog, int chatId) throws RemoteException {
         observers.remove(observer);
 
         // Get the formatted time
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
         String formattedTime = chatLog.getEnd_time().format(formatter);
-        notifyAllObservers(user.getNickname() + " left: " + formattedTime);
+        sendMessage(user.getNickname() + " left: " + formattedTime, user, chatId);
+        notifyAllObservers(user.getNickname() + " left: " + formattedTime, chatId);
     }
 
     @Override
@@ -146,12 +222,60 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
         }
     }
 
+    @Override
+    public void sendAdminMessage(String message, User adminUser, int groupId) throws RemoteException {
+        Transaction tx = null;
+        try (Session session = sessionFactory.openSession()) {
+            tx = session.beginTransaction();
 
-    private void notifyAllObservers(String message) {
+            // Verify admin user exists
+            User managedAdmin = session.get(User.class, adminUser.getUser_id());
+            if (managedAdmin == null) {
+                throw new RemoteException("Admin user not found");
+            }
+
+            // Load chat group with admin relationship
+            ChatGroup chatGroup = session.createQuery(
+                    "FROM ChatGroup g LEFT JOIN FETCH g.admin WHERE g.chatId = :groupId",
+                    ChatGroup.class
+            ).setParameter("groupId", groupId).uniqueResult();
+
+            if (chatGroup == null) {
+                throw new RemoteException("Chat group not found");
+            }
+
+            // Validate admin privileges
+//            if (!chatGroup.getAdmin().getUser_id().equals(managedAdmin.getUser_id())) {
+//                throw new RemoteException("User lacks admin privileges");
+//            }
+
+            // Create and persist message
+            ChatMessage chatMessage = new ChatMessage();
+            chatMessage.setUser(managedAdmin);
+            chatMessage.setChatGroup(chatGroup);
+            chatMessage.setMessage(message);
+            chatMessage.setStart_at(LocalDateTime.now());
+
+            session.persist(chatMessage);
+            tx.commit();
+
+            // Notify observers
+            notifyAllObservers(message, groupId);
+
+        } catch (Exception e) {
+            if (tx != null && tx.isActive()) tx.rollback();
+            throw new RemoteException("Failed to send admin message: " + e.getMessage(), e);
+        }
+    }
+
+    private void notifyAllObservers(String message, int chatId) {
         observers.forEach(obs -> {
-            try { obs.notifyNewMessage(message); }
+            try { obs.notifyNewMessage(message, chatId); }
             catch (RemoteException e) { e.printStackTrace(); }
         });
 
     }
+
+
+
 }

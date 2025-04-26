@@ -16,13 +16,11 @@ public class ChatGroup implements Serializable {
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "admin_id",
-            foreignKey = @ForeignKey(name = "FK_admin",
-                    foreignKeyDefinition = "FOREIGN KEY (admin_id) REFERENCES user(user_id) ON DELETE CASCADE"))
+    @JoinColumn(name = "admin_id", foreignKey = @ForeignKey(name = "FK_admin"))
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User admin;
 
-    // Getters and Setters remain the same
+    // Getters and Setters
     public int getChatId() { return chatId; }
     public void setChatId(int chatId) { this.chatId = chatId; }
     public String getChatName() { return chatName; }

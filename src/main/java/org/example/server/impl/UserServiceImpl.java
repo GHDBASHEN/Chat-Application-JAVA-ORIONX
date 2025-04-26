@@ -1,9 +1,12 @@
 package org.example.server.impl;
 
+import org.example.domain.ChatGroup;
 import org.example.domain.User;
 import org.example.rmi.UserService;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
@@ -84,16 +87,62 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
     }
 
     //for register
+//    @Override
+//    public boolean registerUser(User user) throws RemoteException {
+//        try (Session session = sessionFactory.openSession()) {
+//            session.beginTransaction();
+//            session.save(user);
+//            session.getTransaction().commit();
+//            return true;
+//        } catch (Exception e) {
+//            throw new RemoteException("Error registering user", e);
+//        }
+//
+//    }
     @Override
-    public boolean registerUser(User user) throws RemoteException {
+    public User registerUser(User user) throws RemoteException {
+        Transaction tx = null;
         try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.save(user);
-            session.getTransaction().commit();
-            return true;
+            tx = session.beginTransaction();
+
+            // Persist the user; this will generate the ID
+            session.persist(user);
+
+            tx.commit();
+
+            // At this point, `user.getUserId()` is populated
+            return user;
         } catch (Exception e) {
+            if (tx != null) tx.rollback();
             throw new RemoteException("Error registering user", e);
         }
-
     }
+
+
+
+//    public List<ChatGroup> getGroupDataByUserId(int userId) throws RemoteException {
+//        System.out.println("Hsusususu"+userId);
+//        try (Session session = sessionFactory.openSession()) {
+//            String hql = "SELECT cu.chatGroup.chatName, cu.chatGroup.chatId FROM ChatUser cu WHERE cu.user.user_id= :userId";
+//            return session.createQuery(hql, ChatGroup.class)
+//                    .setParameter("userId", userId)
+//                    .list();
+//        } catch (Exception e) {
+//            throw new RemoteException("Error fetching group names for user", e);
+//        }
+//    }
+    @Override
+    public List<ChatGroup> getGroupDataByUserId(int userId) throws RemoteException {
+        System.out.println("Fetching groups for user ID: " + userId);
+        try (Session session = sessionFactory.openSession()) {
+            String hql = "SELECT cu.chatGroup FROM ChatUser cu WHERE cu.user.user_id = :userId";
+            return session.createQuery(hql, ChatGroup.class)
+                    .setParameter("userId", userId)
+                    .list();
+        } catch (Exception e) {
+            throw new RemoteException("Error fetching group data for user", e);
+        }
+    }
+
+
 }

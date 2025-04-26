@@ -17,32 +17,38 @@ import java.util.List;
 public class ChatLogServiceImpl extends UnicastRemoteObject implements ChatLogService {
     private final SessionFactory sessionFactory;
 
-    public ChatLogServiceImpl() throws RemoteException {
-        super();
+    public ChatLogServiceImpl(SessionFactory sessionFactory) throws RemoteException {
+//        super();
+        this.sessionFactory = sessionFactory;
 
-        Configuration configuration = new Configuration();
-        configuration.addAnnotatedClass(User.class);
-        configuration.addAnnotatedClass(ChatLog.class); // Make sure to include ChatLog
-        configuration.configure("hibernate.cfg.xml");
-        this.sessionFactory = configuration.buildSessionFactory();
+//        Configuration configuration = new Configuration();
+//        configuration.addAnnotatedClass(User.class);
+//        configuration.addAnnotatedClass(ChatLog.class); // Make sure to include ChatLog
+//        configuration.configure("hibernate.cfg.xml");
+//        this.sessionFactory = configuration.buildSessionFactory();
     }
 
     @Override
     public ChatLog login(int user_id) throws RemoteException {
-        ChatLog chatLog = null;
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
 
-            chatLog = new ChatLog();
+            // Close any existing active sessions first
+            session.createQuery("UPDATE ChatLog SET end_time = :now WHERE user_id = :userId AND end_time IS NULL")
+                    .setParameter("now", LocalDateTime.now())
+                    .setParameter("userId", user_id)
+                    .executeUpdate();
+
+            // Create new session
+            ChatLog chatLog = new ChatLog();
             chatLog.setUser_id(user_id);
             chatLog.setStart_time(LocalDateTime.now());
 
-            session.persist(chatLog); //save chat log
+            session.persist(chatLog);
             transaction.commit();
             return chatLog;
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RemoteException("Error while logging in", e);
+            throw new RemoteException("Login error", e);
         }
     }
 

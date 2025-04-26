@@ -14,7 +14,7 @@ public class Main {
         user.setUsername("Namal");
         user.setPassword("password2");
         user.setNickname("nami");
-        user.setProfile_picture("profile_picture");
+        user.setProfilePicture("profile_picture");
         user.setRole("user");
 
         Configuration configuration = new Configuration();

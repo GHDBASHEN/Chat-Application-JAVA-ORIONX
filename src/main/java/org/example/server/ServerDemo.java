@@ -1,7 +1,5 @@
 package org.example.server;
-import org.example.domain.ChatGroup;
-import org.example.domain.ChatUser;
-import org.example.domain.User;
+import org.example.domain.*;
 import org.example.rmi.ChatLogService;
 import org.example.rmi.ChatService;
 import org.example.rmi.UserService;
@@ -22,15 +20,20 @@ public class ServerDemo {
             configuration.addAnnotatedClass(User.class);
             configuration.addAnnotatedClass(ChatUser.class);
             configuration.addAnnotatedClass(ChatGroup.class);
+            configuration.addAnnotatedClass(ChatMessage.class);
+            configuration.addAnnotatedClass(ChatLog.class);
             SessionFactory sessionFactory = configuration.buildSessionFactory();
             ChatService chatService = new ChatServiceImpl(sessionFactory);
             UserService userService = new UserServiceImpl(sessionFactory);
-            ChatLogService logService = new ChatLogServiceImpl();
+            ChatLogService logService = new ChatLogServiceImpl(sessionFactory);
 
             Registry registry = LocateRegistry.createRegistry(55545);
             registry.rebind("ChatService", chatService);
             registry.rebind("UserService", userService);
             registry.rebind("LogService", logService);
+
+            new PreDefinedSql(sessionFactory).addDefaultGroupRow();
+
 
             System.out.println("RMI services are up and running on port 55545");
         } catch (Exception e) {
