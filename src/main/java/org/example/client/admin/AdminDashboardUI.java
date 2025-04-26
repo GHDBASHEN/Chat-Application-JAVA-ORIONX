@@ -186,9 +186,11 @@ public class AdminDashboardUI extends JFrame {
 
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         controlPanel.setOpaque(false);
-        controlPanel.add(createIconButton("🔄 Refresh", "Refresh data", this::loadData));
-        controlPanel.add(createIconButton("➕ New Chat", "Create new chat", this::createChat));
-        controlPanel.add(createIconButton("👥 Add Members", "Add users to chat", this::createChatUser));
+        //controlPanel.add(createIconButton("🔄 Refresh", "Refresh data", this::loadData));
+        controlPanel.add(createIconButton("➕ New Chat Group", "Create new Chat Group", this::createChat));
+        controlPanel.add(createIconButton("👥 Delete Chat Group", "Delete Existing Chat Group", this::deleteChat));
+        controlPanel.add(createIconButton("👥 Add Group Members", "Add users to Chat Group", this::createChatUser));
+        controlPanel.add(createIconButton("👥 Remove Group Members", "Remove users from Chat Group", this::createChatUser));
 
         panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(controlPanel, BorderLayout.SOUTH);
@@ -644,6 +646,34 @@ public class AdminDashboardUI extends JFrame {
             } catch (RemoteException e) {
                 showError("Failed to create chat: " + e.getMessage());
             }
+        }
+    }
+
+    private void deleteChat() {
+        try {
+            int selectedRow = chatTable.getSelectedRow();
+            if (selectedRow == -1) {
+                showError("Please select a chat first!");
+                return;
+            }
+
+            int chatId = (Integer) chatTable.getValueAt(selectedRow, 0);
+
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Are you sure you want to delete this chat group?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                chatService.deleteChat(chatId);
+                JOptionPane.showMessageDialog(this, "Chat deleted successfully!");
+                loadData();
+            }
+        } catch (RemoteException e) {
+            showError("Failed to delete chat: " + e.getMessage());
+        } catch (Exception e) {
+            showError("Error: " + e.getMessage());
         }
     }
 

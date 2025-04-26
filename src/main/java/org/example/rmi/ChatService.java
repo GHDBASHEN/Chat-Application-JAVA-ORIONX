@@ -19,6 +19,7 @@ public interface ChatService extends Remote {
     User getUserByUsername(String username) throws RemoteException;
 
     void createChat(ChatGroup chatGroup) throws RemoteException;
+    void deleteChat(int chatId) throws RemoteException;
     void subscribeToChat(int userId, int chatId) throws RemoteException;
    // void unsubscribeFromChat(int userId, int chatId) throws RemoteException;
 
