@@ -196,7 +196,7 @@ public class ChatLauncherUI extends JFrame {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
-                SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+                SessionFactory sessionFactory = null;
                 List<ChatLog> chatLogs = new ChatLogServiceImpl(sessionFactory).getChatLogsWithNullEndTime();
                 if (!chatLogs.isEmpty()) {
                     for (ChatLog chatLog : chatLogs) {
