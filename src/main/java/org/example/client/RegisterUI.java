@@ -23,7 +23,7 @@ public class RegisterUI extends JFrame {
     }
 
     private void initUI() {
-        setTitle("Create New Account");
+        setTitle("Register");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(500, 550);
         setLocationRelativeTo(null);
@@ -42,7 +42,7 @@ public class RegisterUI extends JFrame {
         Font fieldFont = new Font("Segoe UI", Font.PLAIN, 14);
 
         // Title
-        JLabel titleLabel = new JLabel("Create New Account", SwingConstants.CENTER);
+        JLabel titleLabel = new JLabel("Register", SwingConstants.CENTER);
         titleLabel.setFont(titleFont);
         titleLabel.setForeground(new Color(33, 37, 41));
 
