@@ -1,6 +1,9 @@
 package org.example.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -15,10 +18,12 @@ public class ChatMessage implements Serializable {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "chat_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private ChatGroup chatGroup;
 
     @Column(nullable = false)
@@ -26,6 +31,7 @@ public class ChatMessage implements Serializable {
 
     @Column(name = "start_at", nullable = false)
     private LocalDateTime start_at;
+
 
     public int getMessage_id() {
         return message_id;
