@@ -51,6 +51,23 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
     }
 
     @Override
+    public void deleteChat(int chatId) throws RemoteException {
+        try (Session session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            // Delete the chat group
+            ChatGroup chatGroup = session.get(ChatGroup.class, chatId);
+            if (chatGroup != null) {
+                session.delete(chatGroup);
+            }
+
+            transaction.commit();
+        } catch (Exception e) {
+            throw new RemoteException("Error deleting chat", e);
+        }
+    }
+
+    @Override
     public void subscribeToChat(int userId, int chatId) throws RemoteException {
 
     }
