@@ -4,5 +4,5 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface ChatObserver extends Remote {
-    void notifyNewMessage(String message, int chatId) throws RemoteException;
+    void notifyNewMessage(String message) throws RemoteException;
 }
