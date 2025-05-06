@@ -15,6 +15,7 @@ public interface UserService extends Remote {
 
     User registerUser(User user) throws RemoteException;
 
+
     void updateUser(User user) throws RemoteException;
     //List<String> getGroupDataByUserId(int userId) throws RemoteException;
     List<ChatGroup> getGroupDataByUserId(int userId) throws RemoteException;
