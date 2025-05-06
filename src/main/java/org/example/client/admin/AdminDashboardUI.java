@@ -212,11 +212,21 @@ public class AdminDashboardUI extends JFrame {
         groupChatPanel.setOpaque(false);
         groupChatPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
+        // Control panel for refresh button
+        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        controlPanel.setOpaque(false);
+        controlPanel.add(createIconButton("🔄 Refresh", "Refresh groups", this::loadAdminGroups));
+
         // Group list panel
         adminGroupButtonPanel = new JPanel();
         adminGroupButtonPanel.setLayout(new BoxLayout(adminGroupButtonPanel, BoxLayout.Y_AXIS));
         adminGroupScroll = new JScrollPane(adminGroupButtonPanel);
         styleScrollPane(adminGroupScroll);
+
+        // Combine control panel and group list in a west panel
+        JPanel westPanel = new JPanel(new BorderLayout());
+        westPanel.add(controlPanel, BorderLayout.NORTH);
+        westPanel.add(adminGroupScroll, BorderLayout.CENTER);
 
         // Chat area
         adminChatArea = new JTextArea();
@@ -230,22 +240,17 @@ public class AdminDashboardUI extends JFrame {
         inputPanel.setOpaque(false);
         adminMsgField = new JTextField();
         adminSendButton = createIconButton("📤 Send", "Send message", this::sendAdminGroupMessage);
-
-        // Enable Enter key for sending
         adminMsgField.addActionListener(e -> sendAdminGroupMessage());
-
         inputPanel.add(adminMsgField, BorderLayout.CENTER);
         inputPanel.add(adminSendButton, BorderLayout.EAST);
 
-        // Add components
-        groupChatPanel.add(adminGroupScroll, BorderLayout.WEST);
+        // Add components to main panel
+        groupChatPanel.add(westPanel, BorderLayout.WEST);
         groupChatPanel.add(chatScroll, BorderLayout.CENTER);
         groupChatPanel.add(inputPanel, BorderLayout.SOUTH);
 
-        // Initialize chat observer
         initializeAdminObserver();
         loadAdminGroups();
-       // initializeAdminChatComponents();
         return groupChatPanel;
     }
 
@@ -332,7 +337,6 @@ public class AdminDashboardUI extends JFrame {
                 JButton groupBtn = new JButton(group.getChatName());
                 styleGroupButton(groupBtn);
                 groupBtn.addActionListener(e -> {
-                    // Ensure observer exists before handling selection
                     if (adminObserverStub == null) {
                         showError("Chat observer not initialized");
                         return;
@@ -343,6 +347,10 @@ public class AdminDashboardUI extends JFrame {
                 });
                 adminGroupButtonPanel.add(groupBtn);
             }
+
+            // Refresh UI components
+            adminGroupButtonPanel.revalidate();
+            adminGroupButtonPanel.repaint();
 
             if (!groups.isEmpty()) {
                 selectedAdminGroup = groups.get(0);
