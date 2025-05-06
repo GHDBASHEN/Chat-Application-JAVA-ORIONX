@@ -19,6 +19,10 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -28,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
+import javax.imageio.ImageIO;
 import javax.swing.SwingConstants;
 
 public class AdminDashboardUI extends JFrame {
@@ -98,12 +103,16 @@ public class AdminDashboardUI extends JFrame {
         tabbedPane.addTab("👥 User Management", createUserManagementPanel());
         tabbedPane.addTab("💬 Chat Management", createChatManagementPanel());
         tabbedPane.addTab("💬 Group Chats", createAdminChatPanel());
+        tabbedPane.addTab("👤 Profile", createProfilePanel());
 
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
         add(mainPanel);
         setVisible(true);
 
     }
+
+    // Welcome label for header
+    private JLabel welcomeLabel;
 
     private JPanel createHeaderPanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -115,12 +124,12 @@ public class AdminDashboardUI extends JFrame {
         title.setForeground(PRIMARY_COLOR);
 
         String username = currentAdminUser != null ? currentAdminUser.getUsername() : "Admin";
-        JLabel welcome = new JLabel("Welcome, " + username + "👋");
-        welcome.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        welcome.setForeground(new Color(100, 100, 100));
+        welcomeLabel = new JLabel("Welcome, " + username + "👋");
+        welcomeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        welcomeLabel.setForeground(new Color(100, 100, 100));
 
         panel.add(title, BorderLayout.WEST);
-        panel.add(welcome, BorderLayout.EAST);
+        panel.add(welcomeLabel, BorderLayout.EAST);
 
         return panel;
     }
@@ -841,6 +850,307 @@ public class AdminDashboardUI extends JFrame {
         } catch (RemoteException e) {
             showError("Failed to load data: " + e.getMessage());
         }
+    }
+
+    // Profile-related fields
+    private JTextField emailField;
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private JPasswordField confirmPasswordField;
+    private JTextField nicknameField;
+    private JTextField profilePictureField;
+    private JButton saveProfileButton;
+    private JLabel profilePicLabel;
+
+    private JPanel createProfilePanel() {
+        JPanel profilePanel = new JPanel(new BorderLayout());
+        profilePanel.setOpaque(false);
+        profilePanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        // Create profile picture panel at the top
+        JPanel picturePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        picturePanel.setOpaque(false);
+        profilePicLabel = new JLabel();
+        updateProfilePicture();
+        picturePanel.add(profilePicLabel);
+
+        // Create form panel
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Create components
+        emailField = new JTextField(20);
+        usernameField = new JTextField(20);
+        passwordField = new JPasswordField(20);
+        confirmPasswordField = new JPasswordField(20);
+        nicknameField = new JTextField(20);
+        profilePictureField = new JTextField(20);
+        profilePictureField.setEditable(false); // Make it read-only
+        JButton chooseFileButton = createIconButton("📁 Choose File", "Select profile picture", this::chooseProfilePicture);
+        saveProfileButton = createIconButton("💾 Save Profile", "Save profile changes", this::saveProfile);
+
+        // Pre-populate fields with current user data
+        emailField.setText(currentAdminUser.getEmail());
+        usernameField.setText(currentAdminUser.getUsername());
+        passwordField.setText(currentAdminUser.getPassword());
+        confirmPasswordField.setText(currentAdminUser.getPassword());
+        nicknameField.setText(currentAdminUser.getNickname());
+        profilePictureField.setText(currentAdminUser.getProfilePicture());
+
+        // Add components to panel
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        formPanel.add(new JLabel("Email:"), gbc);
+
+        gbc.gridx = 1;
+        formPanel.add(emailField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        formPanel.add(new JLabel("Username:"), gbc);
+
+        gbc.gridx = 1;
+        formPanel.add(usernameField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        formPanel.add(new JLabel("Password:"), gbc);
+
+        gbc.gridx = 1;
+        formPanel.add(passwordField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        formPanel.add(new JLabel("Confirm Password:"), gbc);
+
+        gbc.gridx = 1;
+        formPanel.add(confirmPasswordField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        formPanel.add(new JLabel("Nickname:"), gbc);
+
+        gbc.gridx = 1;
+        formPanel.add(nicknameField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        formPanel.add(new JLabel("Profile Picture:"), gbc);
+
+        // Create a panel for the profile picture field and choose file button
+        JPanel profilePicturePanel = new JPanel(new BorderLayout(5, 0));
+        profilePicturePanel.add(profilePictureField, BorderLayout.CENTER);
+        profilePicturePanel.add(chooseFileButton, BorderLayout.EAST);
+
+        gbc.gridx = 1;
+        formPanel.add(profilePicturePanel, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        formPanel.add(saveProfileButton, gbc);
+
+        // Add components to main panel
+        profilePanel.add(picturePanel, BorderLayout.NORTH);
+        profilePanel.add(formPanel, BorderLayout.CENTER);
+
+        return profilePanel;
+    }
+
+    private void chooseProfilePicture() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Select Profile Picture");
+
+        // Set file filter to only show image files
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+            public boolean accept(java.io.File f) {
+                if (f.isDirectory()) return true;
+                String name = f.getName().toLowerCase();
+                return name.endsWith(".jpg") || name.endsWith(".jpeg") ||
+                        name.endsWith(".png") || name.endsWith(".gif") ||
+                        name.endsWith(".bmp");
+            }
+            public String getDescription() {
+                return "Image files (*.jpg, *.jpeg, *.png, *.gif, *.bmp)";
+            }
+        });
+
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            java.io.File selectedFile = fileChooser.getSelectedFile();
+            profilePictureField.setText(selectedFile.getAbsolutePath());
+        }
+    }
+
+    private void saveProfile() {
+        try {
+            // Get password values
+            String password = new String(passwordField.getPassword());
+            String confirmPassword = new String(confirmPasswordField.getPassword());
+
+            // Check if passwords match
+            if (!password.equals(confirmPassword)) {
+                showError("Passwords do not match!");
+                return;
+            }
+
+            // Update user object with new values
+            currentAdminUser.setEmail(emailField.getText());
+            currentAdminUser.setUsername(usernameField.getText());
+            currentAdminUser.setPassword(password);
+            currentAdminUser.setNickname(nicknameField.getText());
+
+            // Handle profile picture
+            String selectedFilePath = profilePictureField.getText();
+            if (selectedFilePath != null && !selectedFilePath.isEmpty()) {
+                try {
+                    // Create directory for profile pictures if it doesn't exist
+                    java.io.File profilePicsDir = new java.io.File("profile_pictures");
+                    if (!profilePicsDir.exists()) {
+                        profilePicsDir.mkdir();
+                    }
+
+                    // Get the original file
+                    java.io.File sourceFile = new java.io.File(selectedFilePath);
+                    String fileName = currentAdminUser.getUser_id() + "_" + sourceFile.getName();
+                    java.io.File destFile = new java.io.File(profilePicsDir, fileName);
+
+                    // Copy the file
+                    java.nio.file.Files.copy(
+                            sourceFile.toPath(),
+                            destFile.toPath(),
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                    );
+
+                    // Update the path in the user object to the copied file
+                    String newPath = destFile.getAbsolutePath();
+                    currentAdminUser.setProfilePicture(newPath);
+                    // Update the UI to show the new path
+                    profilePictureField.setText(newPath);
+                } catch (java.io.IOException ioEx) {
+                    System.err.println("Error copying profile picture: " + ioEx.getMessage());
+                    // If file copy fails, still save the original path
+                    currentAdminUser.setProfilePicture(selectedFilePath);
+                }
+            } else {
+                currentAdminUser.setProfilePicture(selectedFilePath);
+            }
+
+            // Call service to update user
+            userService.updateUser(currentAdminUser);
+
+            // Update UI to reflect changes
+            welcomeLabel.setText("Welcome, " + currentAdminUser.getUsername() + "👋");
+
+            // Update profile picture
+            updateProfilePicture();
+
+            // Show success message
+            JOptionPane.showMessageDialog(this,
+                    "Profile updated successfully!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (RemoteException ex) {
+            showError("Error updating profile: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    // Method to update the profile picture in the UI
+    private void updateProfilePicture() {
+        String profilePicPath = currentAdminUser.getProfilePicture();
+        if (profilePicPath != null && !profilePicPath.isEmpty()) {
+            // Create a circular profile picture with 100x100 dimensions
+            ImageIcon profileIcon = createCircularProfilePicture(profilePicPath, 100, 100);
+            profilePicLabel.setIcon(profileIcon);
+        } else {
+            // Set a default profile picture
+            profilePicLabel.setIcon(createDefaultProfilePicture(100, 100));
+        }
+    }
+
+    // Method to create a circular profile picture
+    private ImageIcon createCircularProfilePicture(String imagePath, int width, int height) {
+        try {
+            // Load the image
+            BufferedImage originalImage = ImageIO.read(new File(imagePath));
+            if (originalImage == null) {
+                // Return a default image or placeholder if the image couldn't be loaded
+                return createDefaultProfilePicture(width, height);
+            }
+
+            // Create a new buffered image with transparency
+            BufferedImage circularImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+            // Get the graphics context
+            Graphics2D g2 = circularImage.createGraphics();
+
+            // Set rendering hints for better quality
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            // Create a circular clip
+            Ellipse2D.Double circle = new Ellipse2D.Double(0, 0, width, height);
+            g2.setClip(circle);
+
+            // Scale the original image to fit the circle
+            g2.drawImage(originalImage, 0, 0, width, height, null);
+
+            // Add a circular border
+            g2.setClip(null);
+            g2.setColor(Color.WHITE);
+            g2.setStroke(new BasicStroke(2));
+            g2.draw(circle);
+
+            g2.dispose();
+
+            return new ImageIcon(circularImage);
+        } catch (IOException e) {
+            System.err.println("Error loading profile picture: " + e.getMessage());
+            return createDefaultProfilePicture(width, height);
+        }
+    }
+
+    // Method to create a default profile picture
+    private ImageIcon createDefaultProfilePicture(int width, int height) {
+        BufferedImage defaultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = defaultImage.createGraphics();
+
+        // Set rendering hints
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Draw a circle with a gradient fill
+        Ellipse2D.Double circle = new Ellipse2D.Double(0, 0, width, height);
+        g2.setClip(circle);
+
+        // Create a gradient paint
+        GradientPaint gradient = new GradientPaint(0, 0, PRIMARY_COLOR, width, height, new Color(100, 100, 255));
+        g2.setPaint(gradient);
+        g2.fill(circle);
+
+        // Add a border
+        g2.setClip(null);
+        g2.setColor(Color.WHITE);
+        g2.setStroke(new BasicStroke(2));
+        g2.draw(circle);
+
+        // Add a user icon or initials
+        g2.setColor(Color.WHITE);
+        g2.setFont(new Font("Arial", Font.BOLD, width / 3));
+        FontMetrics fm = g2.getFontMetrics();
+        String text = "A"; // "A" for Admin
+        int textWidth = fm.stringWidth(text);
+        int textHeight = fm.getHeight();
+        g2.drawString(text, (width - textWidth) / 2, (height + textHeight / 2) / 2);
+
+        g2.dispose();
+
+        return new ImageIcon(defaultImage);
     }
 
     private void showError(String message) {
