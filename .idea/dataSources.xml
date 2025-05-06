@@ -1,33 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="chat_app_db@localhost" uuid="4181fcb3-0434-4117-9af4-9933f66fca46">
-      <driver-ref>mysql.8</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:mysql://localhost:3306/chat_app_db</jdbc-url>
-      <jdbc-additional-properties>
-        <property name="com.intellij.clouds.kubernetes.db.host.port" />
-        <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
-        <property name="com.intellij.clouds.kubernetes.db.container.port" />
-      </jdbc-additional-properties>
-      <working-dir>$ProjectFileDir$</working-dir>
-    </data-source>
-<<<<<<< HEAD
-    <data-source source="LOCAL" name="hibernate.cfg.xml/Hibernate" uuid="0ae901a6-548c-43d9-9ffd-919e7c5905a5">
-=======
-    <data-source source="LOCAL" name="hibernate.cfg.xml/Hibernate" uuid="f4ce62da-b5c4-4747-9b1f-2670c3646f11">
->>>>>>> 8247e4199275d9ec7632c6acd644b2219f1159d3
+    <data-source source="LOCAL" name="hibernate.cfg.xml/Hibernate" uuid="a2afb914-95a6-41e5-a582-9d4692f06b21">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
       <remarks>Hibernate
 
-<<<<<<< HEAD
 D:/Projects/Java/Chat-Application/Chat-Application-JAVA-ORIONX/src/main/resources/hibernate.cfg.xml</remarks>
-=======
-C:/Users/HP/OneDrive/Documents/Chat-Application-JAVA-ORIONX/src/main/resources/hibernate.cfg.xml</remarks>
->>>>>>> 8247e4199275d9ec7632c6acd644b2219f1159d3
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
       <jdbc-url>jdbc:mysql://localhost:3306/chat_app_db</jdbc-url>
       <jdbc-additional-properties>
