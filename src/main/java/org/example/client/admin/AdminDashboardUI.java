@@ -235,8 +235,10 @@ public class AdminDashboardUI extends JFrame {
         JScrollPane chatScroll = new JScrollPane(adminChatArea);
         styleScrollPane(chatScroll);
 
+
         // Input panel
         JPanel inputPanel = new JPanel(new BorderLayout(10, 10));
+        inputPanel.setBorder(new EmptyBorder(10, 140, 0, 0));
         inputPanel.setOpaque(false);
         adminMsgField = new JTextField();
         adminSendButton = createIconButton("📤 Send", "Send message", this::sendAdminGroupMessage);
@@ -253,6 +255,7 @@ public class AdminDashboardUI extends JFrame {
         loadAdminGroups();
         return groupChatPanel;
     }
+
 
     private void initializeAdminObserver() {
         try {
