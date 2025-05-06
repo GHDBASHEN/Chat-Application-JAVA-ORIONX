@@ -1,6 +1,5 @@
 package org.example.client;
 
-import org.example.domain.ChatGroup;
 import org.example.domain.User;
 import org.example.rmi.ChatService;
 import org.example.rmi.UserService;
@@ -36,7 +35,7 @@ public class RegisterUI extends JFrame {
 
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
-        mainPanel.setBackground(new Color(245, 245, 245)); // Soft gray background
+        mainPanel.setBackground(new Color(245, 245, 245));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -46,8 +45,7 @@ public class RegisterUI extends JFrame {
         Font labelFont = new Font("Segoe UI", Font.BOLD, 15);
         Font fieldFont = new Font("Segoe UI", Font.PLAIN, 14);
 
-        // Title
-        JLabel titleLabel = new JLabel("Register", SwingConstants.CENTER);
+        JLabel titleLabel = new JLabel("Register user", SwingConstants.CENTER);
         titleLabel.setFont(titleFont);
         titleLabel.setForeground(new Color(33, 37, 41));
 
@@ -60,47 +58,21 @@ public class RegisterUI extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.gridwidth = 1;
 
-        // Username
-        addLabeledField("Username:", usernameField = new JTextField(18), labelFont, fieldFont, gbc, mainPanel, 1);
+        addLabeledField("Username:", usernameField = new RoundedTextField(18), labelFont, fieldFont, gbc, mainPanel, 1);
+        addLabeledField("Nickname:", nicknameField = new RoundedTextField(18), labelFont, fieldFont, gbc, mainPanel, 2);
+        addLabeledField("Email:", emailField = new RoundedTextField(18), labelFont, fieldFont, gbc, mainPanel, 3);
+        addLabeledField("Password:", passwordField = new RoundedPasswordField(18), labelFont, fieldFont, gbc, mainPanel, 4);
 
-        // Nickname
-        addLabeledField("Nickname:", nicknameField = new JTextField(18), labelFont, fieldFont, gbc, mainPanel, 2);
-
-        // Email
-        addLabeledField("Email:", emailField = new JTextField(18), labelFont, fieldFont, gbc, mainPanel, 3);
-
-        // Password
-        addLabeledField("Password:", passwordField = new JPasswordField(18), labelFont, fieldFont, gbc, mainPanel, 4);
-
-        // Register Button
         gbc.gridx = 0;
         gbc.gridy = 5;
         gbc.gridwidth = 2;
         gbc.insets = new Insets(30, 10, 10, 10);
         gbc.anchor = GridBagConstraints.CENTER;
 
-        registerButton = new JButton("Register");
+        registerButton = new RoundedButton("Register");
         registerButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        registerButton.setBackground(new Color(72, 133, 237));
-        registerButton.setForeground(Color.WHITE);
-        registerButton.setFocusPainted(false);
-        registerButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        registerButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(72, 133, 237)),
-                BorderFactory.createEmptyBorder(12, 40, 12, 40)
-        ));
-
+        registerButton.setPreferredSize(new Dimension(200, 40));
         registerButton.addActionListener(this::handleRegister);
-
-        registerButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                registerButton.setBackground(new Color(52, 103, 217)); // Darker blue hover
-            }
-
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                registerButton.setBackground(new Color(72, 133, 237)); // Normal blue
-            }
-        });
 
         mainPanel.add(registerButton, gbc);
 
@@ -120,12 +92,8 @@ public class RegisterUI extends JFrame {
         gbc.gridx = 1;
         gbc.anchor = GridBagConstraints.LINE_START;
         field.setFont(fieldFont);
-        field.setPreferredSize(new Dimension(250, 30));
+        field.setPreferredSize(new Dimension(250, 40));
         field.setBackground(Color.WHITE);
-        field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(180, 180, 180)),
-                BorderFactory.createEmptyBorder(8, 10, 8, 10)
-        ));
         panel.add(field, gbc);
     }
 
@@ -158,17 +126,6 @@ public class RegisterUI extends JFrame {
             newUser.setPassword(password);
             newUser.setRole("USER");
 
-//            boolean success = userService.registerUser(newUser);
-//
-//            if (success) {
-//                //ChatGroup chatGroup =
-//                chatService.addUserToGroup(5, 1); //
-//                JOptionPane.showMessageDialog(this, "Registration successful!");
-//                dispose();
-//            } else {
-//                JOptionPane.showMessageDialog(this, "User already exists or registration failed.", "Registration Failed", JOptionPane.WARNING_MESSAGE);
-//            }
-
             User registered = userService.registerUser(newUser);
             if (registered != null && registered.getUser_id() > 0) {
                 chatService.addUserToGroup(registered.getUser_id(), 1);
@@ -187,5 +144,91 @@ public class RegisterUI extends JFrame {
     private boolean isValidEmail(String email) {
         String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
         return Pattern.matches(emailRegex, email);
+    }
+
+    // Custom Rounded TextField
+    class RoundedTextField extends JTextField {
+        public RoundedTextField(int columns) {
+            super(columns);
+            setOpaque(false);
+            setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(getBackground());
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+            super.paintComponent(g);
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(new Color(180, 180, 180));
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 20, 20);
+            g2.dispose();
+        }
+    }
+
+    // Custom Rounded PasswordField
+    class RoundedPasswordField extends JPasswordField {
+        public RoundedPasswordField(int columns) {
+            super(columns);
+            setOpaque(false);
+            setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(getBackground());
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+            super.paintComponent(g);
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(new Color(180, 180, 180));
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 20, 20);
+            g2.dispose();
+        }
+    }
+
+    // Custom Rounded Button
+    class RoundedButton extends JButton {
+        public RoundedButton(String text) {
+            super(text);
+            setFocusPainted(false);
+            setContentAreaFilled(false);
+            setForeground(Color.WHITE);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(getModel().isRollover() ? new Color(52, 103, 217) : new Color(72, 133, 237));
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+            super.paintComponent(g);
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(new Color(72, 133, 237));
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
+            g2.dispose();
+        }
     }
 }
