@@ -60,6 +60,8 @@ public class AdminDashboardUI extends JFrame {
 
     private JTable userTable;
     private JTable chatTable;
+    private JWindow emojiPopup;
+    private JPanel inputWrapper;
 
     public AdminDashboardUI(User adminUser, UserService userService, ChatService chatService, ChatLogService logService) {
         this.currentAdminUser = adminUser;
@@ -235,6 +237,9 @@ public class AdminDashboardUI extends JFrame {
         JScrollPane chatScroll = new JScrollPane(adminChatArea);
         styleScrollPane(chatScroll);
 
+        // Create emoji button and panel
+        JButton emojiButton = createIconButton("😀", "Select emoji", this::toggleEmojiPanel);
+        JPanel emojiPanel = createEmojiPanel();
 
         // Input panel
         JPanel inputPanel = new JPanel(new BorderLayout(10, 10));
@@ -243,9 +248,17 @@ public class AdminDashboardUI extends JFrame {
         adminMsgField = new JTextField();
         adminSendButton = createIconButton("📤 Send", "Send message", this::sendAdminGroupMessage);
         adminMsgField.addActionListener(e -> sendAdminGroupMessage());
-        inputPanel.add(adminMsgField, BorderLayout.CENTER);
-        inputPanel.add(adminSendButton, BorderLayout.EAST);
+//        inputPanel.add(emojiButton, BorderLayout.WEST);
+//        inputPanel.add(adminMsgField, BorderLayout.CENTER);
+//        inputPanel.add(adminSendButton, BorderLayout.EAST);
 
+        inputWrapper = new JPanel(new BorderLayout(5, 0));
+        inputWrapper.add(emojiButton, BorderLayout.WEST);
+        inputWrapper.add(adminMsgField, BorderLayout.CENTER);
+        inputWrapper.add(adminSendButton, BorderLayout.EAST);
+
+        // Add components to input panel
+        inputPanel.add(inputWrapper, BorderLayout.CENTER);
         // Add components to main panel
         groupChatPanel.add(westPanel, BorderLayout.WEST);
         groupChatPanel.add(chatScroll, BorderLayout.CENTER);
@@ -256,6 +269,60 @@ public class AdminDashboardUI extends JFrame {
         return groupChatPanel;
     }
 
+    private JPanel createEmojiPanel() {
+        JPanel emojiPanel = new JPanel(new GridLayout(4, 8, 5, 5));
+        emojiPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        emojiPanel.setBackground(Color.WHITE);
+
+        // List of common emojis
+        String[] emojis = {
+                "😀", "😁", "😂", "🤣", "😃", "😄", "😅", "😆",
+                "😉", "😊", "😋", "😎", "😍", "😘", "😗", "😙",
+                "😚", "🙂", "🤗", "🤔", "😐", "😑", "😶", "🙄",
+                "😏", "😣", "😥", "😮", "🤐", "😯", "😪", "😫",
+                "😴", "😌", "😛", "😜", "😝", "🤤", "😒", "😓",
+                "😔", "😕", "🙃", "🤑", "😲", "🙁", "🤒", "🤕",
+                "🤢", "🤧", "😷", "🤠", "🤡", "🤥", "🤓", "😈",
+                "👿", "👹", "👺", "💀", "👻", "👽", "🤖", "💩"
+        };
+
+        for (String emoji : emojis) {
+            JButton btn = new JButton(emoji);
+            btn.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
+            btn.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+            btn.addActionListener(e -> insertEmoji(emoji));
+            emojiPanel.add(btn);
+        }
+
+        return emojiPanel;
+    }
+
+    private void toggleEmojiPanel() {
+        JButton emojiButton = (JButton) ((BorderLayout) inputWrapper.getLayout()).getLayoutComponent(BorderLayout.WEST);
+
+        if (emojiPopup == null || !emojiPopup.isVisible()) {
+            emojiPopup = new JWindow();
+            emojiPopup.getContentPane().add(createEmojiPanel());
+            emojiPopup.pack();
+
+            // Position below the emoji button
+            Point location = emojiButton.getLocationOnScreen();
+            emojiPopup.setLocation(location.x, location.y + emojiButton.getHeight());
+            emojiPopup.setVisible(true);
+        } else {
+            emojiPopup.setVisible(false);
+        }
+    }
+
+    private void insertEmoji(String emoji) {
+        adminMsgField.setText(adminMsgField.getText() + emoji);
+        adminMsgField.requestFocus();
+
+        // Close the emoji panel after selection
+        if (emojiPopup != null) {
+            emojiPopup.setVisible(false);
+        }
+    }
 
     private void initializeAdminObserver() {
         try {
