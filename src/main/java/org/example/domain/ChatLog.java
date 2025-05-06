@@ -18,6 +18,7 @@ public class ChatLog  implements Serializable {
     private int user_id;
     private LocalDateTime start_time;
     private LocalDateTime end_time;
+    private String chatFilePath; // Path to the saved chat file
 
     public ChatLog() {
     }
@@ -54,6 +55,14 @@ public class ChatLog  implements Serializable {
         this.end_time = end_time;
     }
 
+    public String getChatFilePath() {
+        return chatFilePath;
+    }
+
+    public void setChatFilePath(String chatFilePath) {
+        this.chatFilePath = chatFilePath;
+    }
+
     @Override
     public String toString() {
         return "Chat{" +
@@ -61,6 +70,7 @@ public class ChatLog  implements Serializable {
                 ", user_id=" + user_id +
                 ", start_time=" + start_time +
                 ", end_time=" + end_time +
+                ", chatFilePath='" + chatFilePath + '\'' +
                 '}';
     }
 }

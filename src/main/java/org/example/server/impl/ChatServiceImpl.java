@@ -122,7 +122,17 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
                 // Additional cleanup logic
                 if (chatLog != null) {
                     chatLog.setEnd_time(LocalDateTime.now());
-                    // Persist chat log changes if needed
+
+                    // Get the formatted time
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
+                    String formattedTime = chatLog.getEnd_time().format(formatter);
+
+                    // Notify all observers that user has left
+                    String leftMessage = user.getNickname() + " left: " + formattedTime;
+                    notifyAllObservers(leftMessage, chatId);
+
+                    // Check if this was the last user in the chat
+                    checkLastUserAndSaveChat(chatId, chatLog);
                 }
             } else {
                 System.err.println("Observer not found in subscribers list");
@@ -221,6 +231,85 @@ public class ChatServiceImpl extends UnicastRemoteObject implements ChatService 
         String formattedTime = chatLog.getEnd_time().format(formatter);
         sendMessage(user.getNickname() + " left: " + formattedTime, user, chatId);
         notifyAllObservers(user.getNickname() + " left: " + formattedTime, chatId);
+
+        // Check if this was the last user in the chat
+        checkLastUserAndSaveChat(chatId, chatLog);
+    }
+
+    private void checkLastUserAndSaveChat(int chatId, ChatLog chatLog) throws RemoteException {
+        try (Session session = sessionFactory.openSession()) {
+            // Count active users in this chat (users with ChatLog entries where end_time is NULL)
+            Long activeUsersCount = session.createQuery(
+                    "SELECT COUNT(c) FROM ChatLog c WHERE c.chat_id = :chatId AND c.end_time IS NULL",
+                    Long.class
+                )
+                .setParameter("chatId", chatId)
+                .uniqueResult();
+
+            if (activeUsersCount != null && activeUsersCount == 0) {
+                // This was the last user, save chat history and update log
+                LocalDateTime endTime = LocalDateTime.now();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
+                String formattedTime = endTime.format(formatter);
+
+                // Notify that chat has stopped
+                String stopMessage = "Chat stopped at: " + formattedTime;
+                notifyAllObservers(stopMessage, chatId);
+
+                // Save chat history to file
+                String filePath = saveChatHistoryToFile(chatId);
+
+                // Update the ChatLog with the file path
+                if (chatLog != null && filePath != null) {
+                    Transaction tx = session.beginTransaction();
+                    chatLog.setChatFilePath(filePath);
+                    session.update(chatLog);
+                    tx.commit();
+                }
+            }
+        } catch (Exception e) {
+            throw new RemoteException("Error checking last user in chat", e);
+        }
+    }
+
+    private String saveChatHistoryToFile(int chatId) throws RemoteException {
+        try {
+            // Get all messages for this chat
+            List<ChatMessage> messages = getAllChatMessages(chatId);
+            if (messages.isEmpty()) {
+                return null;
+            }
+
+            // Create directory for chat logs if it doesn't exist
+            java.io.File chatLogsDir = new java.io.File("chat_logs");
+            if (!chatLogsDir.exists()) {
+                chatLogsDir.mkdir();
+            }
+
+            // Create file name with timestamp
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+            String fileName = "chat_" + chatId + "_" + timestamp + ".txt";
+            java.io.File chatFile = new java.io.File(chatLogsDir, fileName);
+
+            // Write messages to file
+            try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(chatFile))) {
+                writer.println("Chat ID: " + chatId);
+                writer.println("Saved at: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                writer.println("----------------------------------------");
+
+                for (ChatMessage message : messages) {
+                    String formattedTime = message.getStart_at().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    writer.println("[" + formattedTime + "] " + message.getMessage());
+                }
+            }
+
+            System.out.println("Chat history saved to: " + chatFile.getAbsolutePath());
+            return chatFile.getAbsolutePath();
+        } catch (Exception e) {
+            System.err.println("Error saving chat history: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
