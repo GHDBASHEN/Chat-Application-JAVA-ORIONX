@@ -36,7 +36,7 @@ public class ChatLauncherUI extends JFrame {
 
     private void initUI() {
         setTitle("Multi-User Chat Launcher");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(400, 300);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());

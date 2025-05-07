@@ -15,7 +15,7 @@ public class LauncherUI extends JFrame {
 
     private void initUI() {
         setTitle("Chat Application Launcher");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(300, 200);
         setLocationRelativeTo(null);
 
