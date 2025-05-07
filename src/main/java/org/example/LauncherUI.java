@@ -2,9 +2,10 @@ package org.example;
 
 import org.example.client.ChatLauncherUI;
 import org.example.server.ServerDemo;
-
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
@@ -19,13 +20,20 @@ public class LauncherUI extends JFrame {
         setSize(300, 200);
         setLocationRelativeTo(null);
 
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                ServerDemo.stopServer();
+                System.exit(0);
+            }
+        });
+
         JPanel panel = new JPanel(new GridLayout(2, 1, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         JButton serverBtn = new JButton("Start Server");
         JButton clientBtn = new JButton("Start Client");
 
-        // Style buttons
         styleButton(serverBtn, new Color(76, 175, 80));
         styleButton(clientBtn, new Color(33, 150, 243));
 
@@ -47,12 +55,10 @@ public class LauncherUI extends JFrame {
 
     private void startServer() {
         try {
-            // Check if server is already running
             Registry registry = LocateRegistry.getRegistry("localhost", 55545);
-            registry.lookup("ChatService"); // Check if service exists
+            registry.lookup("ChatService");
             JOptionPane.showMessageDialog(this, "Server is already running!");
         } catch (Exception ex) {
-            // Start server in background thread
             new Thread(() -> {
                 ServerDemo.startServer();
                 JOptionPane.showMessageDialog(this, "Server started successfully!");
