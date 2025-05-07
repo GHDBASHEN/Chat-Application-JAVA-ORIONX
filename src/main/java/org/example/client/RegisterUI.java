@@ -1,6 +1,5 @@
 package org.example.client;
 
-import org.example.domain.ChatGroup;
 import org.example.domain.User;
 import org.example.rmi.ChatService;
 import org.example.rmi.UserService;
@@ -36,7 +35,7 @@ public class RegisterUI extends JFrame {
 
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
-        mainPanel.setBackground(new Color(245, 245, 245)); // Soft gray background
+        mainPanel.setBackground(new Color(245, 245, 245));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -46,8 +45,7 @@ public class RegisterUI extends JFrame {
         Font labelFont = new Font("Segoe UI", Font.BOLD, 15);
         Font fieldFont = new Font("Segoe UI", Font.PLAIN, 14);
 
-        // Title
-        JLabel titleLabel = new JLabel("Register", SwingConstants.CENTER);
+        JLabel titleLabel = new JLabel("Register user", SwingConstants.CENTER);
         titleLabel.setFont(titleFont);
         titleLabel.setForeground(new Color(33, 37, 41));
 
@@ -60,49 +58,44 @@ public class RegisterUI extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.gridwidth = 1;
 
-        // Username
-        addLabeledField("Username:", usernameField = new JTextField(18), labelFont, fieldFont, gbc, mainPanel, 1);
+        addLabeledField("Username:", usernameField = new RoundedTextField(18), labelFont, fieldFont, gbc, mainPanel, 1);
+        addLabeledField("Nickname:", nicknameField = new RoundedTextField(18), labelFont, fieldFont, gbc, mainPanel, 2);
+        addLabeledField("Email:", emailField = new RoundedTextField(18), labelFont, fieldFont, gbc, mainPanel, 3);
+        addLabeledField("Password:", passwordField = new RoundedPasswordField(18), labelFont, fieldFont, gbc, mainPanel, 4);
 
-        // Nickname
-        addLabeledField("Nickname:", nicknameField = new JTextField(18), labelFont, fieldFont, gbc, mainPanel, 2);
-
-        // Email
-        addLabeledField("Email:", emailField = new JTextField(18), labelFont, fieldFont, gbc, mainPanel, 3);
-
-        // Password
-        addLabeledField("Password:", passwordField = new JPasswordField(18), labelFont, fieldFont, gbc, mainPanel, 4);
-
-        // Register Button
         gbc.gridx = 0;
         gbc.gridy = 5;
         gbc.gridwidth = 2;
         gbc.insets = new Insets(30, 10, 10, 10);
         gbc.anchor = GridBagConstraints.CENTER;
 
-        registerButton = new JButton("Register");
-        registerButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        registerButton.setBackground(new Color(72, 133, 237));
-        registerButton.setForeground(Color.WHITE);
-        registerButton.setFocusPainted(false);
-        registerButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        registerButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(72, 133, 237)),
-                BorderFactory.createEmptyBorder(12, 40, 12, 40)
-        ));
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        buttonPanel.setOpaque(false);
 
+        // Register Button
+        registerButton = new RoundedButton("Register");
+        registerButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        registerButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        registerButton.setPreferredSize(new Dimension(200, 40));
+        registerButton.setMaximumSize(new Dimension(480, 40));
         registerButton.addActionListener(this::handleRegister);
 
-        registerButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                registerButton.setBackground(new Color(52, 103, 217)); // Darker blue hover
-            }
+        // Cancel Button
+        RoundedButton cancelButton = new RoundedButton("Cancel");
+        cancelButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        cancelButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        cancelButton.setPreferredSize(new Dimension(300, 40));
+        cancelButton.setMaximumSize(new Dimension(480, 40));
+        cancelButton.setNormalColor(new Color(120, 120, 120));
+        cancelButton.setRolloverColor(new Color(90, 90, 90));
+        cancelButton.addActionListener(e -> dispose());
 
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                registerButton.setBackground(new Color(72, 133, 237)); // Normal blue
-            }
-        });
+        buttonPanel.add(registerButton);
+        buttonPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        buttonPanel.add(cancelButton);
 
-        mainPanel.add(registerButton, gbc);
+        mainPanel.add(buttonPanel, gbc);
 
         add(mainPanel);
         setVisible(true);
@@ -120,12 +113,8 @@ public class RegisterUI extends JFrame {
         gbc.gridx = 1;
         gbc.anchor = GridBagConstraints.LINE_START;
         field.setFont(fieldFont);
-        field.setPreferredSize(new Dimension(250, 30));
+        field.setPreferredSize(new Dimension(250, 40));
         field.setBackground(Color.WHITE);
-        field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(180, 180, 180)),
-                BorderFactory.createEmptyBorder(8, 10, 8, 10)
-        ));
         panel.add(field, gbc);
     }
 
@@ -136,56 +125,163 @@ public class RegisterUI extends JFrame {
         String password = new String(passwordField.getPassword());
 
         if (username.isEmpty() || nickname.isEmpty() || email.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "All fields are required.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            showError("All fields are required.");
             return;
         }
 
         if (!isValidEmail(email)) {
-            JOptionPane.showMessageDialog(this, "Please enter a valid email address.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            showError("Please enter a valid email address.");
             return;
         }
 
         if (password.length() < 6) {
-            JOptionPane.showMessageDialog(this, "Password must be at least 6 characters.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            showError("Password must be at least 6 characters.");
             return;
         }
 
         try {
-            User newUser = new User();
-            newUser.setUsername(username);
-            newUser.setNickname(nickname);
-            newUser.setEmail(email);
-            newUser.setPassword(password);
-            newUser.setRole("USER");
-
-//            boolean success = userService.registerUser(newUser);
-//
-//            if (success) {
-//                //ChatGroup chatGroup =
-//                chatService.addUserToGroup(5, 1); //
-//                JOptionPane.showMessageDialog(this, "Registration successful!");
-//                dispose();
-//            } else {
-//                JOptionPane.showMessageDialog(this, "User already exists or registration failed.", "Registration Failed", JOptionPane.WARNING_MESSAGE);
-//            }
-
+            User newUser = createUser(username, nickname, email, password);
             User registered = userService.registerUser(newUser);
-            if (registered != null && registered.getUser_id() > 0) {
-                chatService.addUserToGroup(registered.getUser_id(), 1);
-                JOptionPane.showMessageDialog(this, "Registration successful! Your ID is " + registered.getUser_id());
-                dispose();
-            } else {
-                JOptionPane.showMessageDialog(this, "Registration failed.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
 
+            if (registered != null && registered.getUser_id() > 0) {
+                handleSuccessfulRegistration(registered);
+            } else {
+                showError("Registration failed.");
+            }
         } catch (Exception ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error during registration: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            handleRegistrationError(ex);
         }
+    }
+
+    private User createUser(String username, String nickname, String email, String password) {
+        User user = new User();
+        user.setUsername(username);
+        user.setNickname(nickname);
+        user.setEmail(email);
+        user.setPassword(password);
+        user.setRole("USER");
+        return user;
+    }
+
+    private void handleSuccessfulRegistration(User registered) throws Exception {
+        chatService.addUserToGroup(registered.getUser_id(), 1);
+        JOptionPane.showMessageDialog(this,
+                "Registration successful! Your ID is " + registered.getUser_id());
+        dispose();
+    }
+
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void handleRegistrationError(Exception ex) {
+        ex.printStackTrace();
+        JOptionPane.showMessageDialog(this,
+                "Error during registration: " + ex.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
     }
 
     private boolean isValidEmail(String email) {
         String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
         return Pattern.matches(emailRegex, email);
+    }
+
+    // Custom UI Components
+    class RoundedTextField extends JTextField {
+        public RoundedTextField(int columns) {
+            super(columns);
+            setOpaque(false);
+            setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+            super.paintComponent(g);
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(new Color(180, 180, 180));
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 20, 20);
+            g2.dispose();
+        }
+    }
+
+    class RoundedPasswordField extends JPasswordField {
+        public RoundedPasswordField(int columns) {
+            super(columns);
+            setOpaque(false);
+            setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+            super.paintComponent(g);
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(new Color(180, 180, 180));
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 20, 20);
+            g2.dispose();
+        }
+    }
+
+    class RoundedButton extends JButton {
+        private Color normalColor = new Color(72, 133, 237);
+        private Color rolloverColor = new Color(52, 103, 217);
+
+        public RoundedButton(String text) {
+            super(text);
+            setupButton();
+        }
+
+        private void setupButton() {
+            setFocusPainted(false);
+            setContentAreaFilled(false);
+            setForeground(Color.WHITE);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+        }
+
+        public void setNormalColor(Color color) {
+            this.normalColor = color;
+        }
+
+        public void setRolloverColor(Color color) {
+            this.rolloverColor = color;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getModel().isRollover() ? rolloverColor : normalColor);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+            super.paintComponent(g);
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(normalColor);
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 30, 30);
+            g2.dispose();
+        }
     }
 }
