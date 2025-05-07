@@ -13,7 +13,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public class ServerDemo {
-    public static void main(String[] args) {
+    public static void startServer() {
         try {
             Configuration configuration = new Configuration();
             configuration.configure("hibernate.cfg.xml");
@@ -40,4 +40,5 @@ public class ServerDemo {
             e.printStackTrace();
         }
     }
+
 }

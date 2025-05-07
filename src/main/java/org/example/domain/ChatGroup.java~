@@ -1,11 +1,13 @@
 package org.example.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import java.io.Serializable;
 
 @Entity
 public class ChatGroup implements Serializable {
-    private static final long serialVersionUID = 1L;  // Add serialVersionUID
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,10 +16,13 @@ public class ChatGroup implements Serializable {
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "admin_id")
+    @JoinColumn(name = "admin_id",
+            foreignKey = @ForeignKey(name = "FK_admin",
+                    foreignKeyDefinition = "FOREIGN KEY (admin_id) REFERENCES user(user_id) ON DELETE CASCADE"))
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User admin;
 
-    // Getters and Setters
+    // Getters and Setters remain the same
     public int getChatId() { return chatId; }
     public void setChatId(int chatId) { this.chatId = chatId; }
     public String getChatName() { return chatName; }
