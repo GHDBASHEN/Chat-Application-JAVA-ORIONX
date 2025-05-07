@@ -422,7 +422,8 @@ public class userDashBoard {
 
         JFrame frame = new JFrame("User Dashboard");
         frame.setContentPane(main);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.pack();
 
         // Now UI components should be initialized
