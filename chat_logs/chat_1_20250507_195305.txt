@@ -1,0 +1,88 @@
+Chat ID: 1
+Saved at: 2025-05-07 19:53:05
+----------------------------------------
+[2025-04-25 03:08:33] admin1: admin1 joined: 03:08 AM
+[2025-04-25 03:08:54] admin1: admin1 joined: 03:08 AM
+[2025-04-25 03:08:57] admin1: admin1 joined: 03:08 AM
+[2025-04-25 03:09:01] admin1: admin1 joined: 03:09 AM
+[2025-04-25 03:20:04] admin1: admin1 joined: 03:20 AM
+[2025-04-25 19:07:10] admin1: admin1 joined: 07:07 PM
+[2025-04-25 19:07:16] admin1: admin1 joined: 07:07 PM
+[2025-04-25 19:07:21] admin1: admin1 joined: 07:07 PM
+[2025-04-25 19:07:30] [ADMIN] hi
+[2025-04-25 19:07:35] admin1: admin1 joined: 07:07 PM
+[2025-04-26 20:39:03] admin1: admin1 joined: 08:39 PM
+[2025-04-26 22:47:02] admin1: admin1 joined: 10:47 PM
+[2025-04-26 22:48:19] admin1: admin1 joined: 10:48 PM
+[2025-04-26 22:48:39] admin1: admin1 joined: 10:48 PM
+[2025-04-26 22:50:07] SuperAdmin: SuperAdmin joined: 10:50 PM
+[2025-04-26 22:59:36] SuperAdmin: SuperAdmin joined: 10:59 PM
+[2025-04-26 22:59:50] SuperAdmin: SuperAdmin joined: 10:59 PM
+[2025-04-26 23:00:57] admin1: admin1 joined: 11:00 PM
+[2025-04-26 23:01:40] SuperAdmin: SuperAdmin joined: 11:01 PM
+[2025-04-26 23:01:51] admin1: admin1 joined: 11:01 PM
+[2025-04-26 23:11:44] SuperAdmin: SuperAdmin joined: 11:11 PM
+[2025-04-26 23:12:44] SuperAdmin: SuperAdmin joined: 11:12 PM
+[2025-04-26 23:22:13] SuperAdmin: SuperAdmin joined: 11:22 PM
+[2025-04-26 23:25:41] [ADMIN] bro
+[2025-04-26 23:26:01] [ADMIN] cool
+[2025-04-26 23:26:13] [ADMIN] alright
+[2025-04-26 23:26:23] [ADMIN] bye
+[2025-04-27 00:40:20] SuperAdmin: SuperAdmin joined: 12:40 AM
+[2025-04-27 01:46:41] admin1: admin1 joined: 01:46 AM
+[2025-04-27 01:47:50] admin1: admin1 joined: 01:47 AM
+[2025-04-27 02:05:04] admin1: admin1 joined: 02:05 AM
+[2025-04-27 02:16:00] admin1: admin1 joined: 02:16 AM
+[2025-04-27 02:22:27] admin1: admin1 joined: 02:22 AM
+[2025-04-27 02:35:07] admin1: admin1 joined: 02:35 AM
+[2025-04-27 02:43:44] admin1: admin1 joined: 02:43 AM
+[2025-04-27 16:55:40] admin1: admin1 joined: 04:55 PM
+[2025-04-27 16:57:10] admin1: admin1 joined: 04:57 PM
+[2025-04-27 16:57:15] [ADMIN] hi
+[2025-05-06 13:40:34] admin1: admin1 joined: 01:40 PM
+[2025-05-06 14:25:45] admin1: admin1 joined: 02:25 PM
+[2025-05-06 14:57:15] SuperAdmin: SuperAdmin joined: 02:57 PM
+[2025-05-06 15:24:53] SuperAdmin: SuperAdmin joined: 03:24 PM
+[2025-05-06 15:27:41] SuperAdmin: SuperAdmin joined: 03:27 PM
+[2025-05-06 16:01:08] SuperAdmin: SuperAdmin joined: 04:01 PM
+[2025-05-06 16:05:14] SuperAdmin: SuperAdmin joined: 04:05 PM
+[2025-05-06 16:29:24] GHDB: GHDB joined: 04:29 PM
+[2025-05-06 16:29:28] GHDB: GHDB joined: 04:29 PM
+[2025-05-06 16:29:53] GHDB: GHDB joined: 04:29 PM
+[2025-05-06 17:26:40] GHDB: GHDB joined: 05:26 PM
+[2025-05-06 17:26:43] GHDB: GHDB joined: 05:26 PM
+[2025-05-06 17:26:44] GHDB: GHDB joined: 05:26 PM
+[2025-05-06 17:26:44] GHDB: GHDB joined: 05:26 PM
+[2025-05-06 17:26:45] GHDB: GHDB joined: 05:26 PM
+[2025-05-06 17:26:45] GHDB: GHDB joined: 05:26 PM
+[2025-05-06 17:26:46] GHDB: GHDB joined: 05:26 PM
+[2025-05-06 17:26:46] GHDB: GHDB joined: 05:26 PM
+[2025-05-06 17:26:58] GHDB: GHDB joined: 05:26 PM
+[2025-05-06 17:27:43] GHDB: GHDB joined: 05:27 PM
+[2025-05-06 17:47:59] GHDB: GHDB joined: 05:47 PM
+[2025-05-06 17:48:48] GHDB: GHDB joined: 05:48 PM
+[2025-05-06 17:49:25] GHDB: GHDB joined: 05:49 PM
+[2025-05-06 17:49:35] GHDB: GHDB joined: 05:49 PM
+[2025-05-06 17:49:45] [ADMIN] hi
+[2025-05-06 17:51:07] GHDB: GHDB joined: 05:51 PM
+[2025-05-06 17:53:35] GHDB: GHDB joined: 05:53 PM
+[2025-05-06 17:53:48] [ADMIN] hi
+[2025-05-06 18:01:00] GHDB: GHDB joined: 06:01 PM
+[2025-05-06 18:18:47] GHDB: GHDB joined: 06:18 PM
+[2025-05-06 18:44:55] GHDB: GHDB joined: 06:44 PM
+[2025-05-06 18:45:05] [ADMIN] 🤣😃
+[2025-05-06 18:45:29] [ADMIN] 😊😁🤡
+[2025-05-06 18:45:54] [ADMIN] 😜😐
+[2025-05-06 19:06:57] GHDB: GHDB joined: 07:06 PM
+[2025-05-06 19:52:21] GHDB: GHDB joined: 07:52 PM
+[2025-05-06 20:04:24] GHDB: GHDB joined: 08:04 PM
+[2025-05-06 20:05:23] admin1: admin1 joined: 08:05 PM
+[2025-05-06 20:07:56] Ashen: Ashen joined: 08:07 PM
+[2025-05-06 20:08:04] Ashen: Ashen joined: 08:08 PM
+[2025-05-06 20:08:14] Pathum: Pathum joined: 08:08 PM
+[2025-05-06 20:08:40] [ADMIN] bye
+[2025-05-06 21:45:36] GHDB: GHDB joined: 09:45 PM
+[2025-05-06 21:46:10] GHDB: hi
+[2025-05-06 21:46:16] GHDB: GHDB left: 09:46 PM
+[2025-05-07 19:27:25] Ashen: Ashen joined: 07:27 PM
+[2025-05-07 19:52:47] Ashen: Ashen joined: 07:52 PM
