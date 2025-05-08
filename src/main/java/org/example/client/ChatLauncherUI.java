@@ -15,19 +15,17 @@ import org.example.domain.User;
 import org.example.rmi.*;
 import org.example.server.impl.ChatLogServiceImpl;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
 
 public class ChatLauncherUI extends JFrame {
 
     private JTextField emailField;
     private JPasswordField passwordField;
     private JButton loginButton;
+    private static JButton registerButton;
     private ChatService chatService;
     private static UserService userService;
     private ChatLogService logService;
     private ChatLog chatLog;
-    private static JButton registerButton;
-
 
     public ChatLauncherUI() {
         initUI();
@@ -36,20 +34,19 @@ public class ChatLauncherUI extends JFrame {
 
     private void initUI() {
         setTitle("Multi-User Chat Launcher");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setSize(400, 350);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Main container with gradient background
         JPanel mainPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                Color color1 = new Color(30, 136, 229);
-                Color color2 = new Color(0, 172, 193);
+                Color color1 = new Color(169, 188, 188);
+                Color color2 = new Color(181, 211, 211);
                 GradientPaint gp = new GradientPaint(0, 0, color1, getWidth(), getHeight(), color2);
                 g2d.setPaint(gp);
                 g2d.fillRect(0, 0, getWidth(), getHeight());
@@ -58,11 +55,10 @@ public class ChatLauncherUI extends JFrame {
         mainPanel.setLayout(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Login form panel
         JPanel loginPanel = new JPanel(new GridBagLayout());
         loginPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(8, 5, 8, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         JLabel titleLabel = new JLabel("Chat Application");
@@ -70,31 +66,17 @@ public class ChatLauncherUI extends JFrame {
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        emailField = new JTextField(20);
+        emailField = new RoundedTextField(20);
+        passwordField = new RoundedPasswordField(20);
 
-        passwordField = new JPasswordField(20);
+        loginButton = new RoundedButton("Login");
+        loginButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
-
-        loginButton = new JButton("Login");
-        styleButton(loginButton, new Color(183, 59, 198));
-
-        //fro register
-        registerButton = new JButton("Register");
+        registerButton = new RoundedButton("Register");
         registerButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        registerButton.setBackground(new Color(183, 59, 198));
-        //registerButton.setForeground(Color.WHITE);
-        registerButton.setFocusPainted(false);
-        registerButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-
-
-        registerButton.addActionListener(e -> {
-            new RegisterUI(userService, chatService);
-        });
-
-
-
-
+        loginButton.addActionListener(this::handleLogin);
+        registerButton.addActionListener(e -> new RegisterUI(userService, chatService));
 
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -116,28 +98,14 @@ public class ChatLauncherUI extends JFrame {
         gbc.gridy++;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
         loginPanel.add(loginButton, gbc);
 
-        //for register
         gbc.gridy++;
         loginPanel.add(registerButton, gbc);
 
         mainPanel.add(loginPanel, BorderLayout.CENTER);
         add(mainPanel);
-
-        loginButton.addActionListener(this::handleLogin);
         setVisible(true);
-    }
-
-    private void styleButton(JButton button, Color bgColor) {
-        button.setPreferredSize(new Dimension(120, 40));
-        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        button.setBackground(bgColor);
-        //button.setForeground(Color.WHITE);
-        button.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-        button.setFocusPainted(false);
-        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
     private JLabel createLabel(String text) {
@@ -169,12 +137,10 @@ public class ChatLauncherUI extends JFrame {
                 if (user.getRole().equalsIgnoreCase("admin")) {
                     User adminUser = userService.getUserByUsername(user.getUsername());
                     new AdminDashboardUI(adminUser, userService, chatService, logService);
-                }
-                 else {
+                } else {
                     new userDashBoard(chatService, userService, logService, chatLog, user).handle();
                 }
                 dispose();
-
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid credentials!", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -191,8 +157,7 @@ public class ChatLauncherUI extends JFrame {
             e.printStackTrace();
         }
 
-        SwingUtilities.invokeLater(() -> new ChatLauncherUI());
-
+        SwingUtilities.invokeLater(ChatLauncherUI::new);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
@@ -208,7 +173,91 @@ public class ChatLauncherUI extends JFrame {
                 ex.printStackTrace();
             }
         }));
+    }
 
+    // Rounded TextField
+    static class RoundedTextField extends JTextField {
+        public RoundedTextField(int columns) {
+            super(columns);
+            setOpaque(false);
+            setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+        }
 
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(Color.WHITE);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+            super.paintComponent(g);
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(new Color(180, 180, 180));
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 20, 20);
+            g2.dispose();
+        }
+    }
+
+    // Rounded PasswordField
+    static class RoundedPasswordField extends JPasswordField {
+        public RoundedPasswordField(int columns) {
+            super(columns);
+            setOpaque(false);
+            setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(Color.WHITE);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+            super.paintComponent(g);
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(new Color(180, 180, 180));
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 20, 20);
+            g2.dispose();
+        }
+    }
+
+    // Rounded Button
+    static class RoundedButton extends JButton {
+        public RoundedButton(String text) {
+            super(text);
+            setFocusPainted(false);
+            setContentAreaFilled(false);
+            setForeground(Color.WHITE);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(getModel().isRollover() ? new Color(52, 103, 217) : new Color(72, 133, 237));
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+            super.paintComponent(g);
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(new Color(72, 133, 237));
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
+            g2.dispose();
+        }
     }
 }

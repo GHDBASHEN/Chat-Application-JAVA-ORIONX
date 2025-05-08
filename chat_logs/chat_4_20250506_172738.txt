@@ -1,0 +1,29 @@
+Chat ID: 4
+Saved at: 2025-05-06 17:27:38
+----------------------------------------
+[2025-04-25 03:08:56] admin1: admin1 joined: 03:08 AM
+[2025-04-25 03:09:00] admin1: admin1 joined: 03:09 AM
+[2025-04-25 03:09:05] admin1: admin1 joined: 03:09 AM
+[2025-04-25 03:10:03] [ADMIN] hiiiii
+[2025-04-25 03:10:19] [ADMIN] broooo
+[2025-04-25 19:07:18] admin1: admin1 joined: 07:07 PM
+[2025-04-26 20:39:17] admin1: admin1 joined: 08:39 PM
+[2025-04-26 20:40:01] admin1: admin1 joined: 08:40 PM
+[2025-04-26 20:40:06] [ADMIN] hi
+[2025-04-26 22:47:07] admin1: admin1 joined: 10:47 PM
+[2025-04-26 22:47:21] admin1: admin1 joined: 10:47 PM
+[2025-04-26 22:50:41] admin1: admin1 joined: 10:50 PM
+[2025-04-26 22:50:47] SuperAdmin: SuperAdmin joined: 10:50 PM
+[2025-04-26 22:51:36] [ADMIN] hiiii
+[2025-04-26 22:51:42] [ADMIN] geeee
+[2025-04-26 23:02:14] SuperAdmin: SuperAdmin joined: 11:02 PM
+[2025-04-26 23:02:17] admin1: admin1 joined: 11:02 PM
+[2025-04-27 02:06:54] admin1: admin1 joined: 02:06 AM
+[2025-04-27 02:45:05] admin1: admin1 joined: 02:45 AM
+[2025-04-27 02:45:08] [ADMIN] ddssfdfvv
+[2025-04-27 16:56:43] admin1: admin1 joined: 04:56 PM
+[2025-04-27 16:56:48] [ADMIN] hi
+[2025-04-27 16:59:50] admin1: admin1 joined: 04:59 PM
+[2025-05-06 16:01:47] SuperAdmin: SuperAdmin joined: 04:01 PM
+[2025-05-06 16:01:52] [ADMIN] hi
+[2025-05-06 17:27:12] GHDB: GHDB joined: 05:27 PM
