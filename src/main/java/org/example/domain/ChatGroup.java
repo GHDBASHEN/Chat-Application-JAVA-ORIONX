@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class ChatGroup implements Serializable {
@@ -20,8 +22,26 @@ public class ChatGroup implements Serializable {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User admin;
 
-    // Getters and Setters
+    @ManyToMany
+    @JoinTable(
+            name = "chat_user",
+            joinColumns = @JoinColumn(name = "group_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Set<User> participants = new HashSet<>();
+
+    @OneToMany(mappedBy = "chatGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Set<ChatMessage> messages = new HashSet<>();
+
+
+
+
     public int getChatId() { return chatId; }
+    public Set<User> getParticipants() {
+        return participants;
+    }
     public void setChatId(int chatId) { this.chatId = chatId; }
     public String getChatName() { return chatName; }
     public void setChatName(String chatName) { this.chatName = chatName; }

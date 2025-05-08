@@ -17,38 +17,32 @@ import java.util.List;
 public class ChatLogServiceImpl extends UnicastRemoteObject implements ChatLogService {
     private final SessionFactory sessionFactory;
 
-    public ChatLogServiceImpl(SessionFactory sessionFactory) throws RemoteException {
-//        super();
-        this.sessionFactory = sessionFactory;
+    public ChatLogServiceImpl() throws RemoteException {
+        super();
 
-//        Configuration configuration = new Configuration();
-//        configuration.addAnnotatedClass(User.class);
-//        configuration.addAnnotatedClass(ChatLog.class); // Make sure to include ChatLog
-//        configuration.configure("hibernate.cfg.xml");
-//        this.sessionFactory = configuration.buildSessionFactory();
+        Configuration configuration = new Configuration();
+        configuration.addAnnotatedClass(User.class);
+        configuration.addAnnotatedClass(ChatLog.class); // Make sure to include ChatLog
+        configuration.configure("hibernate.cfg.xml");
+        this.sessionFactory = configuration.buildSessionFactory();
     }
 
     @Override
     public ChatLog login(int user_id) throws RemoteException {
+        ChatLog chatLog = null;
         try (Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
 
-            // Close any existing active sessions first
-            session.createQuery("UPDATE ChatLog SET end_time = :now WHERE user_id = :userId AND end_time IS NULL")
-                    .setParameter("now", LocalDateTime.now())
-                    .setParameter("userId", user_id)
-                    .executeUpdate();
-
-            // Create new session
-            ChatLog chatLog = new ChatLog();
+            chatLog = new ChatLog();
             chatLog.setUser_id(user_id);
             chatLog.setStart_time(LocalDateTime.now());
 
-            session.persist(chatLog);
+            session.persist(chatLog); //save chat log
             transaction.commit();
             return chatLog;
         } catch (Exception e) {
-            throw new RemoteException("Login error", e);
+            e.printStackTrace();
+            throw new RemoteException("Error while logging in", e);
         }
     }
 
@@ -133,5 +127,21 @@ public class ChatLogServiceImpl extends UnicastRemoteObject implements ChatLogSe
             e.printStackTrace();
             throw new RemoteException("Error while logging in", e);
         }
+    }
+
+
+    @Override
+    public ChatLog login(Long userId, Long chatId) throws RemoteException {
+        return null;
+    }
+
+    @Override
+    public ChatLog logout(Long userId, Long chatId) throws RemoteException {
+        return null;
+    }
+
+    @Override
+    public boolean isUserOnline(Long userId, Long chatId) throws RemoteException {
+        return false;
     }
 }
