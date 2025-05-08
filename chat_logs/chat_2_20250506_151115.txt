@@ -1,0 +1,20 @@
+Chat ID: 2
+Saved at: 2025-05-06 15:11:15
+----------------------------------------
+[2025-04-25 22:12:02] BMarley: BMarley joined: 10:12 PM
+[2025-04-25 22:12:58] Janey: Janey joined: 10:12 PM
+[2025-04-25 22:13:22] [ADMIN] hi
+[2025-04-25 22:13:33] BMarley: hi
+[2025-04-25 22:16:15] BMarley: BMarley left: 10:16 PM
+[2025-04-27 12:00:34] SuperAdmin: SuperAdmin joined: 12:00 PM
+[2025-04-27 12:01:48] jac: jac left: 12:01 PM
+[2025-04-27 12:44:34] SuperAdmin: SuperAdmin joined: 12:44 PM
+[2025-04-27 12:44:38] SuperAdmin: SuperAdmin joined: 12:44 PM
+[2025-04-27 12:44:42] SuperAdmin: SuperAdmin joined: 12:44 PM
+[2025-04-27 12:44:46] SuperAdmin: SuperAdmin joined: 12:44 PM
+[2025-05-05 11:55:42] BMarley: BMarley joined: 11:55 AM
+[2025-05-05 11:55:54] BMarley: BMarley left: 11:55 AM
+[2025-05-05 12:02:15] BMarley: BMarley joined: 12:02 PM
+[2025-05-05 12:06:29] BMarley: BMarley left: 12:06 PM
+[2025-05-06 15:11:08] SuperAdmin: SuperAdmin joined: 03:11 PM
+[2025-05-06 15:11:14] SuperAdmin: SuperAdmin joined: 03:11 PM
