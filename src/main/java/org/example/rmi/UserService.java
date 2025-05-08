@@ -12,12 +12,11 @@ public interface UserService extends Remote {
 
     User getUser(int id) throws RemoteException;
     User checkEmailAndPassword(String email, String password) throws RemoteException;
-<<<<<<< HEAD
-=======
+
 
     User registerUser(User user) throws RemoteException;
 
->>>>>>> ce070b379de105a4c7ea089b70cf38533e91ae09
+
     void updateUser(User user) throws RemoteException;
     //List<String> getGroupDataByUserId(int userId) throws RemoteException;
     List<ChatGroup> getGroupDataByUserId(int userId) throws RemoteException;
