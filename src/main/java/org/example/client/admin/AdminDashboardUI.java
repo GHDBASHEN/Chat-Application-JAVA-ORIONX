@@ -346,7 +346,7 @@ public class AdminDashboardUI extends JFrame {
                     }
                     selectedAdminGroup = group;
                     handleGroupSelection(group.getChatId());
-                    highlightSelectedButton(groupBtn);
+                   // highlightSelectedButton(groupBtn);
                 });
                 adminGroupButtonPanel.add(groupBtn);
             }
